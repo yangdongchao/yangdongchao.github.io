@@ -1,1 +1,19 @@
-theme: jekyll-theme-hacker
+title: Dongchao Yang
+description: Personal website & blog
+url: "https://dongchaoyang.top"
+
+# Blog settings
+permalink: /blog/:year/:month/:day/:title/
+paginate: 10
+
+# Markdown
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Exclude from build
+exclude:
+  - particles.js
+  - particles.json
+  - app.js

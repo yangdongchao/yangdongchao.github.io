@@ -1,0 +1,41 @@
+---
+layout: default
+title: Blog
+permalink: /blog/
+---
+
+<div class="section-card">
+  <h2>Blog</h2>
+  <p style="color:#718096; font-size:0.95em; margin-bottom:1.5em;">Thoughts on audio AI, speech processing, and research.</p>
+
+  {% if site.posts.size > 0 %}
+  <ul class="blog-list">
+    {% for post in site.posts %}
+    <li class="blog-list-item">
+      <a href="{{ post.url | relative_url }}" class="blog-list-link">
+        <div class="blog-list-date">{{ post.date | date: "%b %d, %Y" }}</div>
+        <div class="blog-list-body">
+          <h3 class="blog-list-title">{{ post.title }}</h3>
+          {% if post.description %}
+          <p class="blog-list-desc">{{ post.description }}</p>
+          {% elsif post.excerpt %}
+          <p class="blog-list-desc">{{ post.excerpt | strip_html | truncatewords: 30 }}</p>
+          {% endif %}
+          {% if post.tags.size > 0 %}
+          <div class="blog-list-tags">
+            {% for tag in post.tags %}
+            <span class="post-tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="blog-empty">
+    <p>Coming soon...</p>
+  </div>
+  {% endif %}
+</div>

@@ -1,0 +1,275 @@
+/* ===== Blog List Page ===== */
+.blog-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.blog-list-item {
+  margin-bottom: 0.5em;
+}
+
+.blog-list-link {
+  display: flex;
+  gap: 1.2em;
+  padding: 1.2em;
+  border-radius: 8px;
+  background: #f8fafc;
+  border-left: 3px solid #e2e8f0;
+  text-decoration: none !important;
+  transition: border-color 0.2s, background 0.2s;
+  align-items: flex-start;
+}
+
+.blog-list-link:hover {
+  border-left-color: #667eea;
+  background: #f1f5ff;
+}
+
+.blog-list-date {
+  flex-shrink: 0;
+  font-size: 0.82em;
+  font-weight: 500;
+  color: #718096;
+  min-width: 5.5em;
+  padding-top: 0.2em;
+}
+
+.blog-list-body {
+  flex: 1;
+}
+
+.blog-list-title {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 0.3em;
+  padding: 0;
+  border: none;
+}
+
+.blog-list-link:hover .blog-list-title {
+  color: #5a67d8;
+}
+
+.blog-list-desc {
+  font-size: 0.9em;
+  color: #718096;
+  line-height: 1.6;
+  margin: 0 0 0.4em;
+}
+
+.blog-list-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+}
+
+.blog-empty {
+  text-align: center;
+  padding: 3em 0;
+  color: #a0aec0;
+  font-size: 1.1em;
+}
+
+/* ===== Post Tags ===== */
+.post-tag {
+  display: inline-block;
+  font-size: 0.78em;
+  font-weight: 500;
+  color: #5a67d8;
+  background: #667eea12;
+  padding: 0.15em 0.6em;
+  border-radius: 12px;
+  border: 1px solid #667eea25;
+}
+
+/* ===== Blog Post Article ===== */
+.blog-post {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2.5em 2.5em;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.post-header {
+  margin-bottom: 2em;
+  padding-bottom: 1.5em;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.post-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.3;
+  margin: 0 0 0.5em;
+  border: none;
+  padding: 0;
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+
+.post-date {
+  font-size: 0.9em;
+  color: #718096;
+}
+
+.post-tags {
+  display: flex;
+  gap: 0.4em;
+  flex-wrap: wrap;
+}
+
+/* ===== Post Content ===== */
+.post-content {
+  font-size: 1.02em;
+  line-height: 1.85;
+  color: #2d3748;
+}
+
+.post-content h2 {
+  font-size: 1.4em;
+  margin: 1.8em 0 0.6em;
+}
+
+.post-content h3 {
+  font-size: 1.15em;
+  margin: 1.5em 0 0.5em;
+}
+
+.post-content p {
+  margin: 0 0 1.2em;
+  color: #2d3748;
+}
+
+.post-content a {
+  color: #5a67d8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.post-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+
+.post-content blockquote {
+  margin: 1.2em 0;
+  padding: 0.8em 1.2em;
+  border-left: 4px solid #667eea;
+  background: #f8fafc;
+  border-radius: 0 8px 8px 0;
+  color: #4a5568;
+}
+
+.post-content blockquote p {
+  margin: 0;
+  color: #4a5568;
+}
+
+/* Code blocks */
+.post-content code {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: #e53e3e;
+}
+
+.post-content pre {
+  margin: 1.2em 0;
+  padding: 1.2em 1.5em;
+  background: #1a202c;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.post-content pre code {
+  background: none;
+  color: #e2e8f0;
+  padding: 0;
+  font-size: 0.88em;
+}
+
+/* Tables */
+.post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 0.92em;
+}
+
+.post-content th {
+  background: #f8fafc;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6em 0.8em;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.post-content td {
+  padding: 0.6em 0.8em;
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+}
+
+/* Lists */
+.post-content ul, .post-content ol {
+  margin: 0 0 1.2em 1.5em;
+  padding: 0;
+}
+
+.post-content li {
+  margin-bottom: 0.4em;
+}
+
+/* Math (KaTeX/MathJax) */
+.post-content .katex-display,
+.post-content .MathJax_Display {
+  overflow-x: auto;
+  padding: 0.5em 0;
+}
+
+/* ===== Post Footer ===== */
+.post-footer {
+  margin-top: 2.5em;
+  padding-top: 1.5em;
+  border-top: 1px solid #edf2f7;
+}
+
+.back-link {
+  font-size: 0.95em;
+  font-weight: 500;
+  color: #5a67d8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #434190;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .blog-post {
+    padding: 1.5em 1.2em;
+  }
+
+  .post-title {
+    font-size: 1.4em;
+  }
+
+  .blog-list-link {
+    flex-direction: column;
+    gap: 0.3em;
+  }
+}
