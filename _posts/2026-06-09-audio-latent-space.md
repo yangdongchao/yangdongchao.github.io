@@ -4,6 +4,7 @@ title: "Audio Generative Modeling in Latent Space"
 date: 2026-06-09
 tags: [Audio, Generative Models]
 description: "音频生成的两条路线——离散 codec + LM 与连续 diffusion / flow——如何收敛，以及背后的理论。"
+hidden: true
 ---
 
 <p style="font-size:.9em;color:#718096"><strong>中文</strong> · <a href="/blog/2026/06/09/audio-latent-space-en/">English</a></p>

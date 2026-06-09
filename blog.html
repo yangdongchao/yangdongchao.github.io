@@ -10,7 +10,7 @@ permalink: /blog/
 
   {% if site.posts.size > 0 %}
   <ul class="blog-list">
-    {% for post in site.posts %}
+    {% for post in site.posts %}{% unless post.hidden %}
     <li class="blog-list-item">
       <a href="{{ post.url | relative_url }}" class="blog-list-link">
         <div class="blog-list-date">{{ post.date | date: "%b %d, %Y" }}</div>
@@ -31,7 +31,7 @@ permalink: /blog/
         </div>
       </a>
     </li>
-    {% endfor %}
+    {% endunless %}{% endfor %}
   </ul>
   {% else %}
   <div class="blog-empty">
