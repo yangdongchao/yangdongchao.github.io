@@ -662,7 +662,7 @@ Special thanks to Sander Dieleman's original *Generative modelling in latent spa
 
 The progress of this field over the past five years comes from the entire audio codec / audio LM community. Constrained by length, I couldn't cite every relevant work, and omissions are inevitable — but this article is essentially a distillation standing on top of all of these works, and I hereby thank, all together, every paper that pushed this field forward.
 
-The judgments and Hot Takes in the text represent only my personal view at this moment, inevitably with immature, or even mistaken, places. I very much welcome you to come discuss, ask questions, or directly point out where I got it wrong.
+The judgments and Hot Takes in the text represent only my personal view at this moment, inevitably with immature, or even mistaken, places. I very much welcome you to come discuss, ask questions, or directly point out where I got it wrong — find me on X (Twitter) at [@dcyang98](https://x.com/dcyang98), by email at [dcyang@se.cuhk.edu.hk](mailto:dcyang@se.cuhk.edu.hk), or on GitHub at [@yangdongchao](https://github.com/yangdongchao).
 
 ---
 
