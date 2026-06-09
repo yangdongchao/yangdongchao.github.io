@@ -268,7 +268,7 @@ The model's reconstruction quality was completely fine; every frame sounded like
 
 ![Semantic drift in SoundStream-only AR LM](/img/blog/audio-latent-space/fig4_drift.png)
 
-**caption**: "The drift that the pre-AudioLM SoundStream-only AR LM would exhibit. Every sound sounds correct (the green segment is also fluent speech), but the spoken content derails from some moment (the red segment onward)."
+**caption**: "The drift you get from a pre-AudioLM SoundStream-only AR LM. The spectrogram on top shows the acoustics stay fluent the whole way through — every frame sounds like real speech, nothing looks wrong; the problem is entirely in the content below — coherent at first (green), then derailing into off-topic gibberish from some word onward (red). Acoustically fine, semantically off the rails — that's what drift is."
 
 This isn't hard to diagnose. SoundStream is a codec — it optimizes "how to recover the waveform," not "what the signal is saying." Its tokens encode information that's highly physically correlated between adjacent frames (the waveforms of adjacent 50 Hz frames are nearly identical), but **no one ever told it what "finishing a sentence" means**. At short distances the LM can learn the local connections between tokens (this frame to the next), but at long distances there's no anchor telling it "we're still talking about the same thing."
 
@@ -667,8 +667,6 @@ The judgments and Hot Takes in the text represent only my personal view at this 
 ---
 
 ## References {#refs}
-
-> The following citations are auto-numbered in order of appearance in the text; click the superscript in the text to jump. The arXiv numbers have all been checked.
 
 [^dieleman-latents]: Sander Dieleman, "Generative modelling in latent space", blog 2025. https://sander.ai/2025/04/15/latents.html
 [^survey]: Mousavi et al., "Discrete Audio Tokens: More Than a Survey!", TMLR 2025. https://arxiv.org/abs/2506.10274
