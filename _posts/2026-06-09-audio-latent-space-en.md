@@ -3,7 +3,7 @@ layout: post
 title: "Audio Generative Modeling in Latent Space"
 date: 2026-06-09
 tags: [Audio, Generative Models]
-description: "A research note on audio generation in latent space: discrete codec tokens, continuous latents, and why the two directions are becoming closer."
+description: "Two routes to audio generation — discrete codec + LM vs. continuous diffusion / flow — how they converge, and the theory underneath."
 ---
 
 <p style="font-size:.9em;color:#718096"><a href="/blog/2026/06/09/audio-latent-space/">中文</a> · <strong>English</strong></p>
@@ -225,16 +225,13 @@ The sequence length goes from T to T × N. A 30-second, 75 Hz, 8-layer RVQ audio
 
 **A small landscape of quantization methods**
 
-Although RVQ dominates, the actual landscape of quantization algorithms is much richer than the "RVQ vs lookup-free" dichotomy. The survey organizes at least eight categories:
+Although RVQ dominates, the actual landscape of quantization algorithms is much richer than the "RVQ vs lookup-free" dichotomy. A few representative ones (the fuller eight-category split is in the survey):
 
 - **SVQ** (Single VQ) — a single large codebook. WavTokenizer (4096 codes)[^wavtokenizer], BigCodec (159M parameters[^bigcodec], single codebook compressed to 1 kbps), TS3-Codec[^ts3codec], and dMel (directly quantizing mel)[^dmel] go this direction. What they bet on is that a single codebook simplifies the downstream LM's unrolling: one token per frame, with no burden of delay pattern or local transformer. The cost has two parts: one is encoder/decoder capacity (BigCodec's 159M parameters are an order of magnitude larger than EnCodec/DAC, largely so the single codebook can hold up); the other is that **the frame rate is pushed higher** — a single codebook can carry only limited information per frame (log₂4096 ≈ 12 bits), so to keep reconstruction quality you can only stuff in more frames (WavTokenizer's mainstream version is 75 Hz, BigCodec 80 Hz). WavTokenizer also has a 40 Hz low-frame-rate version, but reconstruction quality degrades noticeably — which shows that "low frame rate + single codebook" currently has a floor, and to compress down to Mimi's 12.5 Hz level it seems multiple codebooks are required to hold up.
 - **RVQ** — hierarchical residual, the aforementioned mainstream.
-- **GRVQ** (Group Residual VQ) — HiFi-Codec's[^hificodec] design: split the latent in the channel dimension into multiple groups, each doing RVQ independently. This amounts to expanding the information distribution from "only along hierarchical depth" into two axes, "channel width × hierarchical depth," alleviating the first layer's information overload.
 - **MSRVQ** (Multi-Scale RVQ) — SNAC's[^snac] approach, where **different RVQ layers run at different temporal resolutions**. The first few layers are low frame rate (capturing coarse structure), the later layers high frame rate (capturing detail) — SNAC actually uses three layers at 12 / 23 / 47 Hz. This is a compromise implementation of variable-length tokenization within the RVQ framework. LLM-Codec[^llmcodec] also uses a multi-scale structure, but layers on a unique design: its codebook is taken directly from an LLM's word vectors (see §2.3), so these multi-scale tokens are simultaneously "aligned to the text vocabulary" — multi-scale handles layering information by granularity, text-aligned makes each layer's token look like text in the LLM's eyes.
-- **CSRVQ** (Cross-Scale RVQ) — ESC's[^esc] approach, inserting quantization modules at multiple levels of the encoder/decoder, progressively refining the reconstruction from coarse to fine.
 - **FSQ** (Finite Scalar Quantization)[^fsq] — quantizes each dimension independently to fixed discrete levels, with no nearest-neighbor lookup and no collapse. In vision, MAGVIT-2 and others use it very successfully. In audio, SQ-Codec, Spectral Codecs, HARP-Net, etc. use it — and notably, the survey's controlled ablation found **FSQ on 16 kHz actually surpasses RVQ on UTMOS/DNSMOS**, so at the perceptual level FSQ doesn't necessarily lose.
-- **PQ** (Product Quantization) — splits the latent into sub-vectors and quantizes them separately, commonly used in SSL models (Best-RQ[^bestrq], USM's random-projection variant).
-- **K-means** offline — take a pretrained SSL model (HuBERT[^hubert] / WavLM / w2v-BERT) and cluster its hidden-layer features with k-means to get tokens. This is essentially not a codec but "use SSL as encoder + post-hoc discretization," discussed in 2.3 below.
+- A few others just refine one specific part of RVQ rather than building a different system: **GRVQ** (HiFi-Codec[^hificodec] splits the latent into groups, each doing RVQ, to ease first-layer overload), **CSRVQ** (ESC[^esc] refines progressively across encoder/decoder levels), **PQ** (sub-vector quantization, common in SSL models like Best-RQ[^bestrq]), and the "k-means on a pretrained SSL model's hidden features (HuBERT[^hubert], etc.)" route — SSL-as-encoder + post-hoc discretization, not really a codec (see §2.3).
 
 Let me return to fill in the foreshadowing left by SVQ above. We said "a single codebook must go high frame rate to keep quality," but this floor has a premise: **it holds under the setting of "directly reconstructing the waveform."** Once you switch the target to mel — directly tokenizing mel, or having the decoder reconstruct mel — the difficulty immediately drops a notch: mel is low-entropy, phase-free, and contextually continuous (those nice properties of §1.2), and quite a few works can compress a single-layer VQ down to 25 Hz, leaving waveform reconstruction to a separate vocoder. This is another piece of evidence that mel didn't really exit — it shifts the line of "how low a single codebook can compress" down a notch.
 
@@ -254,9 +251,11 @@ The appeal of this design isn't just "bypassing RVQ." The deeper motivation is t
 
 So **the more accurate judgment is: RVQ remains mainstream at the codec-design layer, but at the end-to-end generation-system layer it's being squeezed by the "single-layer semantic VQ + continuous decoder" direction**. This hybrid direction will reappear in §4.2 — it's the strongest evidence that the "continuous features take over the generation side" direction has already run successfully in products.
 
+> **Takeaway:** RVQ isn't just a compression trick — it also hands the downstream LM a useful hierarchy: early layers lean semantic, later layers acoustic, and the same token stream can be consumed on demand. That, more than compression, is why it's hard to replace in generation systems.
+
 ### 2.3 AudioLM's semantic / acoustic paradigm {#sec-2-3}
 
-This section discusses two things: **why AudioLM originally split tokens into two sets, semantic and acoustic, and how later work folded this division of labor into a single codec.** The real problem AudioLM saw (long-range semantics need to be specially carried) is correct; its solution — two independent tokenizers + a three-stage cascade — was an expedient under 2022 conditions. I won't prophesy here whether "the distinction between semantic / acoustic will end"; I'll just trace how this happened: how this division of labor came about, and how it was folded step by step into one codec.
+In one sentence: **AudioLM splitting tokens into semantic + acoustic was a 2022 expedient — the insight (long-range semantics need to be carried separately) is right, but the implementation, "two independent tokenizers + a three-stage cascade," is now being folded into a single codec.** Below I trace how it came about and how it got absorbed into one codec.
 
 Back to Google Research in 2022. A group of people was doing a concrete experiment: take SoundStream's RVQ tokens, train a standard autoregressive transformer, and see if they could continue a speech prompt into longer speech.
 
@@ -472,6 +471,8 @@ The end of §3 left a suspense: once the continuous AR ecosystem matures and the
 First make clear that the two directions are actually converging on the same set of goals, and can even coexist (4.1); then look at what kind of unified interface this convergence will land on — a deeper RVQ, or lighter continuous features (4.2); then audio's unique "fixed-grid constraint" (4.3); finally collect the two "real controversies" from the introduction into a unified geometric framework (4.4): Sander's rate-distortion-modelability triangle, in audio, needs to be extended into a tetrahedron.
 
 ### 4.1 Discrete and continuous are converging on the same set of goals {#sec-4-1}
+
+> **Main point:** Discrete and continuous latents aren't moving in opposite directions — they're both trying to improve modelability under audio's strict sequence-length and streaming constraints.
 
 Step back and look at what the previous three chapters laid out, and you'll find something easily obscured by the "discrete vs continuous" opposition narrative: **the two directions are actually converging toward the same set of goals.** No matter which end you start from, you end up solving the same three problems —
 
