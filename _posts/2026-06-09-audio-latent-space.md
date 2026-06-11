@@ -148,7 +148,7 @@ VQGAN（Esser et al., 2021）[^vqgan]做的事情很简单：**让 latent 自己
 
 ![Timeline: handcrafted to learned latent](/img/blog/audio-latent-space/fig3_timeline.png)
 
-**caption**："同一件事在两个领域以几年的时差发生——把手工 latent（橙色）换成学出来的（蓝色）。但音频这一波到今天仍然带着 codec 这个名字，掩盖了它和 VQGAN 的同源性。"
+**caption**："音频的中间那层 latent，终于从手工的（mel + vocoder）换成了学出来的（neural codec）——这正是视觉早几年用 VAE / VQGAN 走过的那条'手工 → 学习'之路。但音频这一波到今天仍叫 codec，这个名字掩盖了它和 VQGAN 的同源。"
 
 **Audio codec 这一代——SoundStream / EnCodec / DAC——做的事情，从 latent framing 看，就是 JPEG → VQGAN 在音频上的对应历史。** 把工程师手工设计的 latent 换成数据学出来的 latent。这条类比当然不完全精确（audio codec 强烈继承了压缩-传输的工程基因，VQGAN 一开始就是为了下游生成而设计的），但作为 framing 是清晰的。
 
