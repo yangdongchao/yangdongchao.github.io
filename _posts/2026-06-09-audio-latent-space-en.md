@@ -241,6 +241,10 @@ Why is audio still mostly RVQ? This question must first distinguish which layer 
 
 First, and most concrete: **RVQ can get high fidelity and low frame rate at the same time.** These two things are contradictory for a single-layer VQ — as said earlier, a single codebook must push the frame rate up to keep quality (WavTokenizer 75 Hz, BigCodec 80 Hz). RVQ stacks capacity with hierarchical residuals, so it can recover high-fidelity audio at a very low frame rate (Mimi 12.5 Hz). And the frame rate directly determines the downstream LM's sequence length, so **low frame rate = short sequence = good modeling**, which is the most valuable gift a codec gives downstream. A single layer struggles to have it both ways.
 
+![RVQ: build capacity in depth](/img/blog/audio-latent-space/fig9_rvq.png)
+
+> **caption**: "RVQ's bet — build capacity in depth, not by raising the frame rate. The first quantizer is coarsest (carries semantics and most energy); each later layer quantizes the previous layer's residual, adding finer detail; every layer emits one token, together a multi-codebook stream. So one frame can hold the information needed for high fidelity while the frame rate stays low — exactly where its value lies."
+
 Second, **ecosystem inertia**. EnCodec/DAC are free, easy-to-use pretrained codecs, and around multi-layer RVQ a whole set of downstream recipes was accumulated (delay pattern, local transformer, training tricks), which new work just picks up and uses. Incidentally, let me clear up a common misunderstanding: **switching to single-layer SVQ doesn't require "redesigning" downstream — quite the opposite, it directly simplifies it away** (one token per frame, fed directly to a standard causal LM, delay pattern removed). So SVQ's cost isn't on downstream, but on the codec side, in that "fidelity × low frame rate" dilemma — which loops right back to the first reason.
 
 Third, the more essential reason: **RVQ's hierarchy is structurally free, and no other scheme has it.** FSQ/LFQ's dimensions are semantically equivalent, and SVQ is a single codebook with no hierarchy at all — to do semantic / acoustic decoupling, you can only force it with extra training objectives. Once you lose this free hierarchy, the entire design philosophy of the AudioLM family — "first layer for semantics, later layers for acoustics" — has to be redone. Vision can afford this redo (there, semantic / acoustic decoupling isn't a core need), but audio can't — this point is the core argument of the judgment in §4.2.
@@ -373,6 +377,10 @@ The discrete direction's story is "turning audio into another kind of text." The
 
 ### 3.1 First phase: adapting the vision template {#sec-3-1}
 
+![The continuous route's engineering template](/img/blog/audio-latent-space/fig10_continuous_pipeline.png)
+
+> **caption**: "The continuous route's engineering template is almost a port of the LDM diagram in §1: waveform → VAE encoder compresses to a continuous latent → flow / diffusion generates on that latent → decoder recovers the waveform. The only difference from the discrete route: the middle latent isn't quantized — each frame is a continuous vector, not a codeword."
+
 First, let's correct a common misunderstanding: sequence-latent models for audio appeared **very early**. VRNN (Chung et al., NeurIPS 2015)[^vrnn] was already doing speech modeling with one latent per time step on TIMIT / Blizzard, SRNN (Fraccaro et al., 2016)[^srnn] followed up, and FHVAE (Hsu, Zhang, Glass, NeurIPS 2017)[^fhvae] used a hierarchical sequence VAE to achieve speaker/content disentanglement. The insight of "preserving the time grid" arrived six years earlier in audio than in vision's VQGAN — because audio's temporal nature is so obvious that no one would think to compress an entire utterance into a single fixed vector.
 
 What slowed down the continuous direction wasn't the grid, but **the blur**. The Gaussian likelihood of a pure VAE has a well-known problem: **over-smoothing** — repeatedly studied in the parametric-TTS era (Toda & Tokuda 2007's[^toda] Global Variance compensation was largely fixing it), where the generated spectral trajectory is the average of all reasonable realizations, sounding muffled and dull. In the language of §1.1: the Gaussian likelihood forcibly regresses to the mean on texture, and **the mean of a texture isn't any legal texture**.
@@ -440,6 +448,10 @@ The problem is in the dimension. DashengTokenizer's latent is 1280-dimensional �
 
 The WavCube / LoSATok mentioned in §3.2 are aimed largely at this edge — compressing 1024 / 1280-dimensional semantic features into 128 dimensions, both keeping the semantics and lowering the modeling cost, seemingly getting both ends. But we must see clearly to which step they verified: the good results all come from **NAR generation like DiT**, while what's discussed here — **streaming continuous AR**, connecting a low-dimensional semantic latent to a flow head that must run every frame and be causal — **has still not been verified.** That is, the dimension problem is being solved on the offline / NAR side, but on the streaming side it's still blank.
 
+![The continuous-route triangle](/img/blog/audio-latent-space/fig11_continuous_triangle.png)
+
+> **caption**: "The continuous route's triangle — semantic richness, cheap-to-model/stream, and reconstruction pull against each other. DashengTokenizer takes semantics + reconstruction (at the cost of high dimension); VibeVoice takes streaming + reconstruction (losing semantics); so far no continuous representation grabs all three corners at once."
+
 So the continuous direction's core design problem can be summarized as a triangle: **semantic richness** (prefers high-dimensional, semantically anchored) × **streaming modeling cost** (prefers low-dimensional, simple distribution) × **reconstruction quality** (prefers information fidelity). Until not long ago, no continuous representation had taken all three corners at once — DashengTokenizer took semantics and reconstruction (at the cost of high dimension), VibeVoice took streaming and reconstruction (at the cost of losing semantics); the WavCube / LoSATok just mentioned used low-dimensional compression to assemble the **properties** of all three corners, yet were only verified on NAR, with the streaming-AR corner still hanging.
 
 The MingTok-Audio mentioned in §3.2 deserves a closer look here — because it largely shows how hard this triangle is to dodge. It's a VAE-based continuous tokenizer, 50 Hz, causal and streamable; the encoder first puts out a **low-dimensional compact latent** (design target in the 32/64 range), then uses a semantic module to lift it into a **high-dimensional semanticized latent**, and what the downstream LLM ingests and the decoder reconstructs with is this high-dimensional latent. The key is that it **doesn't compress the semantics into the low dimension** — the semantics still live at the high-dimensional end; its strategy is to **keep both views simultaneously**: the compact latent attends to efficiency, the high-dimensional latent attends to semantics.
@@ -465,6 +477,10 @@ First make clear that the two directions are actually converging on the same set
 ### 4.1 Discrete and continuous are converging on the same set of goals {#sec-4-1}
 
 > **Main point:** Discrete and continuous latents aren't moving in opposite directions — they're both trying to improve modelability under audio's strict sequence-length and streaming constraints.
+
+![The two routes are converging](/img/blog/audio-latent-space/fig12_convergence.png)
+
+> **caption**: "Two routes, one destination. Whether you start from discrete (codec + LM) or continuous (diffusion / flow), you end up solving the same set of problems: shorter sequences, a semantic latent, streaming, modelability. The surface 'discrete vs continuous' debate is really converging toward the middle."
 
 Step back and look at what the previous three chapters laid out, and you'll find something easily obscured by the "discrete vs continuous" opposition narrative: **the two directions are actually converging toward the same set of goals.** No matter which end you start from, you end up solving the same three problems —
 
