@@ -145,7 +145,7 @@ What VQGAN (Esser et al., 2021)[^vqgan] did is simple: **let the latent learn it
 
 ![Timeline: handcrafted to learned latent](/img/blog/audio-latent-space/fig3_timeline.png)
 
-**caption**: "Audio's middle latent finally went from handcrafted (mel + vocoder) to learned (neural codec) — the same handcrafted-to-learned shift vision made a few years earlier with VAE / VQGAN. But this shift in audio still carries the name 'codec' to this day, which obscures its shared origin with VQGAN."
+**caption**: "Audio's middle latent finally went from handcrafted (mel + vocoder) to learned (neural codec). And that learned 'codec' is really a VQGAN-style learned VQ — the lingering name just obscures the shared origin."
 
 **What this generation of audio codecs — SoundStream / EnCodec / DAC — did, viewed through the latent framing, is the audio counterpart of the JPEG → VQGAN history.** Replacing the engineer's handcrafted latent with a data-learned latent. This analogy is of course not perfectly precise (audio codec strongly inherits the engineering genes of compression-and-transmission, while VQGAN was designed from the start for downstream generation), but as a framing it's clear.
 
