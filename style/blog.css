@@ -273,3 +273,41 @@
     gap: 0.3em;
   }
 }
+
+/* ===== Flat, Sander / GitHub-README-like reading style (posts only) ===== */
+.blog-post {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+.post-header {
+  border-bottom: 1px solid #eaecef;
+}
+.post-content {
+  font-size: 1.05em;
+  line-height: 1.75;
+  color: #24292e;
+  max-width: 760px;
+}
+.post-content h2 {
+  padding-left: 0;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+  margin: 2em 0 0.8em;
+}
+.post-content h2::before { display: none; }   /* drop the gradient bar inside posts */
+.post-content h3 { margin: 1.6em 0 0.5em; }
+.post-content a { color: #0969da; }
+.post-content blockquote {
+  border-left: 4px solid #dfe2e5;
+  background: none;
+  border-radius: 0;
+  color: #57606a;
+  padding: 0 1em;
+}
+.post-content blockquote p { color: #57606a; }
+.post-content code {           /* neutral, not red */
+  color: #24292e;
+  background: #f3f4f6;
+}

@@ -45,5 +45,14 @@ navToggle.addEventListener('click', () => {
 });
 </script>
 
+<!-- MathJax (renders kramdown $$...$$ math; tex2jax fallback) -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: { inlineMath: [['$$','$$']], displayMath: [['\\[','\\]']], processEscapes: true },
+  "HTML-CSS": { availableFonts: ["TeX"] }
+});
+</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_CHTML"></script>
+
 </body>
 </html>
