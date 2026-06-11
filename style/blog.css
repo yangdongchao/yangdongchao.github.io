@@ -311,3 +311,13 @@
   color: #24292e;
   background: #f3f4f6;
 }
+
+/* ===== More breathing room: avoid the wall-of-text feel (posts only) ===== */
+.post-content p { margin: 0 0 1.6em; }
+.post-content ul, .post-content ol { margin: 0 0 1.6em 1.5em; }
+.post-content li { margin-bottom: 0.55em; }
+.post-content img { display: block; margin: 2.6em auto 0.6em; }
+.post-content blockquote { margin: 2em 0; }
+.post-content h2 { margin-top: 2.8em; }
+.post-content h3 { margin-top: 2.1em; }
+.post-content hr { margin: 2.6em 0; border: 0; border-top: 1px solid #eaecef; }
