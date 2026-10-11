@@ -1,0 +1,7 @@
+.DS_Store
+_site/
+_preview/
+.jekyll-cache/
+.sass-cache/
+.bundle/
+__pycache__/

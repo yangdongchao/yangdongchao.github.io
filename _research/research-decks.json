@@ -1,0 +1,478 @@
+{
+  "uniaudio": [
+    "UniAudio 1.0",
+    "One modeling language for audio",
+    [
+      [
+        "Idea",
+        "Different audio tasks. One modeling language.",
+        "Instead of designing a separate generator for every task, UniAudio turns both the conditions and the audio to generate into token sequences.",
+        "<div class=\"ua-taskmap\"><div class=\"ua-examples\"><div><span>Phonemes</span><i>→</i><b>Speech</b></div><div><span>Noisy speech</span><i>→</i><b>Clean speech</b></div><div><span>Text description</span><i>→</i><b>Sound / music</b></div></div><div class=\"ua-shared\"><small>SHARED SEQUENCE FORMAT</small><div class=\"ua-sequence\"><span>Task ID</span><span>Condition</span><strong>Target audio →</strong></div><p>One autoregressive model learns to predict the next token across tasks.</p></div></div><div class=\"ua-bottom\"><strong>7 <span>jointly trained tasks</span></strong><strong>+4 <span>tasks added by fine-tuning</span></strong><p>The question: can audio tasks benefit from learning together?</p></div>",
+        "<a href=\"https://arxiv.org/html/2310.00704v6\">UniAudio paper ↗</a> · Task formulation and training setup. Examples shown; not an exhaustive task list."
+      ],
+      [
+        "Method",
+        "Long context globally. Acoustic detail locally.",
+        "Audio codecs produce several tokens per frame. Flattening them all into one stream makes the expensive, long-context transformer process a much longer sequence.",
+        "<div class=\"ua-architecture\"><div class=\"ua-flat\"><div class=\"ua-line-label\"><b>Flattened baseline</b><span>Long-context sequence: K × T</span></div><div class=\"ua-tokenrow\"><span class=\"ua-c1\">1.1</span><span class=\"ua-c2\">1.2</span><span class=\"ua-c3\">1.3</span><span class=\"ua-c1\">2.1</span><span class=\"ua-c2\">2.2</span><span class=\"ua-c3\">2.3</span><span class=\"ua-c1\">3.1</span><span class=\"ua-c2\">3.2</span><span class=\"ua-c3\">3.3</span><span class=\"ua-c1\">4.1</span><span class=\"ua-c2\">4.2</span><span class=\"ua-c3\">4.3</span></div><p>Time and codebook detail occupy the same long stream.</p></div><div class=\"ua-hierarchy\"><div class=\"ua-line-label\"><b>UniAudio · Global–Local</b><span>Long-context sequence: T</span></div><div class=\"ua-global\"><small>GLOBAL<br>across frames</small><b>Frame 1</b><i>→</i><b>Frame 2</b><i>→</i><b>Frame 3</b><i>→</i><b>Frame 4</b></div><div class=\"ua-local\"><small>LOCAL · within each frame</small><div><b>Code 1</b><i>→</i><b>Code 2</b><i>→</i><b>Code 3</b></div><span>A small autoregressive model, conditioned on the global state.</span></div></div></div><p class=\"ua-takeaway\">Shorten the expensive sequence <strong>without dropping within-frame dependencies.</strong></p>",
+        "<a href=\"https://arxiv.org/html/2310.00704v6\">UniAudio paper ↗</a> · §2.3. Schematic: T = 4 frames, K = 3 codebooks. Both levels are autoregressive; the local decoder is not parallel."
+      ],
+      [
+        "Evidence",
+        "Sharing helps. Hierarchy cuts training cost.",
+        "Two separate ablations test the two central ideas: learning across tasks, and modeling codec tokens at different temporal scales.",
+        "<div class=\"ua-evidence\"><div class=\"ua-panel\"><small>01 / JOINT VS. SINGLE-TASK TRAINING</small><h5>Better sound &amp; music generation</h5><p>Same backbone · FAD ↓</p><div class=\"ua-bar-key\"><span>Single task</span><b>Joint training</b></div><div class=\"ua-bars\"><strong>Text → sound</strong><div><span style=\"width:73.3%\">3.84</span></div><div><b style=\"width:59.5%\">3.12</b></div><strong>Text → music</strong><div><span style=\"width:100%\">5.24</span></div><div><b style=\"width:69.7%\">3.65</b></div></div></div><div class=\"ua-panel\"><small>02 / GLOBAL–LOCAL VS. FLATTENING</small><h5>Less memory. Less training time.</h5><p>Matched 3-codebook setup · similar parameter budget</p><table class=\"ua-metrics\"><thead><tr><th>Metric</th><th>Flat</th><th>G–L</th></tr></thead><tbody><tr><th>GPU memory</th><td>36.7 GB</td><td><b>19.4 GB</b></td></tr><tr><th>Time / iteration</th><td>1.63 s</td><td><b>0.73 s</b></td></tr><tr><th>Speech MOS ↑</th><td>3.80 ± .09</td><td>3.77 ± .05</td></tr></tbody></table><div class=\"ua-reductions\"><b>47%<span>less memory</span></b><b>55%<span>less time / iteration</span></b></div></div></div>",
+        "<a href=\"https://arxiv.org/html/2310.00704v6\">UniAudio paper ↗</a> · Multi-task ablation and Table 4. Architecture benchmark: LibriTTS, 20-second clips, 100-trial averages; authors’ baseline implementations. Percent reductions calculated from reported values; timing measures training, not inference."
+      ],
+      [
+        "Influence",
+        "From unified audio generation to real-time systems.",
+        "UniAudio’s separation of temporal context and within-frame detail became part of a broader architecture lineage spanning speech, dialogue, and music.",
+        "<div class=\"ua-lineage-root\"><strong>UniAudio · Global–Local</strong><span>Model across frames globally; generate acoustic tokens locally.</span></div><div class=\"ua-influence-grid\"><div><small>SPEECH GENERATION · 2024</small><h5>Fish Speech</h5><p>Its developers identify Dual AR as “slow-fast (UniAudio)” and report it as their most reliable tested decoding strategy.</p><a href=\"https://huggingface.co/blog/lengyue233/fish-speech-1\">Developer report ↗</a></div><div><small>REAL-TIME DIALOGUE · 2024</small><h5>Moshi · Kyutai</h5><p>Uses Temporal and Depth Transformers; explicitly cites UniAudio among the audio-modeling predecessors it extends.</p><a href=\"https://kyutai.org/Moshi.pdf#page=15\">§3.4 · architecture ↗</a></div><div><small>LIVE MUSIC · 2025</small><h5>Magenta RT · Google DeepMind</h5><p>Live Music Models describes its efficient modeling method as similar to UniAudio and Moshi, citing both directly.</p><a href=\"https://arxiv.org/pdf/2508.04651#page=3\">§2 · method, refs. 21–22 ↗</a></div><div><small>SONG GENERATION · 2026</small><h5>HeartMuLa</h5><p>Its hierarchical music generator follows UniAudio’s factorization: global structure first, then local acoustic tokens.</p><a href=\"https://arxiv.org/html/2601.10547v3#S3.SS1\">§3.1 · architecture ↗</a></div></div>",
+        "Sources linked per example. Moshi also credits RQ-Transformer and other predecessors; Live Music Models describes a similar method. These are documented architectural connections, not claims of exclusive origin."
+      ]
+    ]
+  ],
+  "instructtts": [
+    "InstructTTS",
+    "Language controls the delivery, too",
+    [
+      [
+        "Interface",
+        "Describe how to speak, as well as what to say.",
+        "InstructTTS explores free-form natural-language style control in an early January 2023 work.",
+        "<div class=\"rx-prompt\"><div class=\"rx-prompt-head\">TWO INDEPENDENT USER INPUTS · illustrative</div><div><span>Content</span><b>“I thought you would be here.”</b><em>words</em></div><div class=\"rx-query\"><span>Style</span><b>“Speak softly, with a calm, steady tone.”</b><em>delivery</em></div></div><p class=\"rx-takeaway\">A style request can combine emotion, energy, and speaking manner.</p>",
+        "<a href=\"https://arxiv.org/abs/2301.13662\">First public release · 31 January 2023 ↗</a>"
+      ],
+      [
+        "Method",
+        "Learn a language–style connection before generating speech.",
+        "Paired descriptions and speech teach the style representation; content remains a separate condition.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 275\" role=\"img\" aria-label=\"Style and content branches condition discrete diffusion separately\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"15\" y=\"35\" width=\"195\" height=\"55\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"112.5\" y=\"67.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Style description</text><path d=\"M210 62 L251 62 M244.0 67.0 L251 62 L244.0 57.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"253\" y=\"35\" width=\"218\" height=\"55\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"362.0\" y=\"67.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Aligned style embedding</text><rect x=\"15\" y=\"165\" width=\"195\" height=\"55\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"112.5\" y=\"197.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Words / phonemes</text><path d=\"M210 192 L251 192 M244.0 197.0 L251 192 L244.0 187.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"253\" y=\"165\" width=\"218\" height=\"55\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"362.0\" y=\"197.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Content encoder</text><path d=\"M471 62 H515 V127 H555 M471 192 H515 V127\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"556\" y=\"98\" width=\"195\" height=\"60\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"653.5\" y=\"133.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Discrete diffusion</text><path d=\"M751 127 L786 127 M779.0 132.0 L786 127 L779.0 122.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><text x=\"830\" y=\"132\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Speech</text><text x=\"440\" y=\"253\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">Reduce content and speaker leakage from the style representation</text></svg>",
+        "<a href=\"https://arxiv.org/html/2301.13662v2#S4\">Style alignment and disentanglement ↗</a>"
+      ],
+      [
+        "Evidence",
+        "Measure naturalness and style relevance separately.",
+        "Human ratings with 95% confidence intervals; the baseline uses the same style encoder.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">System</th><th scope=\"col\">Naturalness MOS ↑</th><th scope=\"col\">Style relevance RMOS ↑</th></tr></thead><tbody><tr><th scope=\"row\">Adapted StyleSpeech baseline</th><td>4.04 ± 0.08</td><td>3.85 ± 0.10</td></tr><tr><th scope=\"row\">InstructTTS · Mel</th><td>4.35 ± 0.07</td><td>4.22 ± 0.09</td></tr><tr><th scope=\"row\">InstructTTS · Wave / GRVQ</th><td>3.95 ± 0.05</td><td>4.32 ± 0.07</td></tr></tbody></table></div><p class=\"rx-note\">The strongest style relevance and strongest naturalness occur in different variants.</p>",
+        "<a href=\"https://arxiv.org/html/2301.13662v2#S6.T2\">Table II ↗</a>"
+      ],
+      [
+        "Listen",
+        "Keep the words fixed; change the style request.",
+        "Listen for the requested change in energy and delivery.",
+        "<p class=\"deck-quote\" lang=\"zh\">学长今天还说他喜欢我呢。你不珍惜我，我就跟别人跑了。</p><div class=\"deck-audio-pair\"><div><strong>Calm & steady</strong><p lang=\"zh\">镇定从容，语气平和，语调稳定</p><audio controls preload=\"none\" src=\"media/instructtts-calm.wav\" aria-label=\"Calm InstructTTS example\"></audio></div><div><strong>Angry & forceful</strong><p lang=\"zh\">语调高昂，声音宏亮，内心非常愤慨</p><audio controls preload=\"none\" src=\"media/instructtts-angry.wav\" aria-label=\"Angry InstructTTS example\"></audio></div></div><p class=\"deck-note\">Selected project samples: a qualitative illustration of control. See the paper for systematic evaluation.</p>",
+        "<a href=\"https://dongchaoyang.top/InstructTTS/\">Original project samples ↗</a> · Qualitative illustration, alongside the systematic evaluation on page 3."
+      ]
+    ]
+  ],
+  "heartmula": [
+    "HeartMuLa",
+    "Research methods become a working system",
+    [
+      [
+        "Application",
+        "Earlier methods meet inside a song-generation system.",
+        "HeartMuLa is a concrete application of my representation and generation research.",
+        "<div class=\"rx-lineage\"><div><a href=\"presentations.html#almtokenizer-slide-2\">ALMTokenizer</a><span>query compression</span><b>HeartCodec tokens</b></div><div><a href=\"presentations.html#uniaudio-slide-2\">UniAudio</a><span>Global–Local modeling</span><b>Hierarchical music generator</b></div><div><a href=\"presentations.html#simplespeech-slide-1\">SimpleSpeech</a><span>SQ-Codec latent space</span><b>Flow-based reconstruction</b></div></div>",
+        "<a href=\"https://arxiv.org/html/2601.10547v3#S2.SS1\">HeartCodec §2.1 ↗</a> · <a href=\"https://arxiv.org/html/2601.10547v3#S3.SS1\">HeartMuLa §3.1 ↗</a>"
+      ],
+      [
+        "System",
+        "Compact token generation and waveform reconstruction work together.",
+        "Lyrics, tags, and reference audio condition the music language model.",
+        "<div class=\"rx-conditions\"><span>Structured lyrics</span><span>Style tags</span><span>Reference audio</span></div><div class=\"rx-path\"><div><small>SEQUENCE MODEL</small><strong>Global–Local</strong><span>Predict music tokens</span></div><div><small>DETOKENIZER</small><strong>Flow matching</strong><span>Recover SQ-Codec latents</span></div><div><small>WAVEFORM</small><strong>SQ-Codec decoder</strong><span>Render the song</span></div></div><p class=\"rx-note\">The representation connects long-range song modeling to detailed acoustic reconstruction.</p>",
+        "<a href=\"https://arxiv.org/html/2601.10547v3#S3.SS2\">Conditioning and architecture ↗</a>"
+      ],
+      [
+        "Evidence",
+        "A better decoder improves the same generated tokens.",
+        "Controlled decoder-stage comparison.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">HeartCodec stage</th><th scope=\"col\">SongEval average ↑</th><th scope=\"col\">Phoneme error rate ↓</th></tr></thead><tbody><tr><th scope=\"row\">Pretrain + finetune</th><td>4.31</td><td>0.1092</td></tr><tr><th scope=\"row\">+ Reflow</th><td>4.34</td><td>0.1258</td></tr><tr><th scope=\"row\">+ SQ-Codec finetuning</th><td>4.41</td><td>0.1005</td></tr></tbody></table></div><p class=\"rx-takeaway\">Reflow shows a tradeoff; subsequent SQ-Codec finetuning improves both reported measures.</p>",
+        "<a href=\"https://arxiv.org/html/2601.10547v3#S2.SS3.SSS4\">Table 5 · fixed generated tokens ↗</a>"
+      ],
+      [
+        "Explore",
+        "Hear the system; trace the methods behind it.",
+        "Listen for sustained musical structure, vocal clarity, and acoustic detail.",
+        "<div class=\"rx-resource\"><div><small>SELECTED PUBLIC SAMPLE</small><h5>Generated song</h5><audio controls preload=\"none\" src=\"media/heartmula.mp3\" aria-label=\"HeartMuLa generated song\"></audio><p>Illustration of the system; quantitative evidence is on the previous page.</p></div><div><small>OPEN SYSTEM</small><h5>From paper to usable code</h5><p><a href=\"https://github.com/HeartMuLa/heartlib\">Code and models ↗</a></p><p><a href=\"https://heartmula.github.io/\">Project and listening examples ↗</a></p></div></div>",
+        "<a href=\"https://arxiv.org/html/2601.10547v3\">Full team report ↗</a>"
+      ]
+    ]
+  ],
+  "diffsound": [
+    "DiffSound",
+    "An early route from language to environmental sound",
+    [
+      [
+        "Question",
+        "Generate the scene a sentence describes.",
+        "A sound description can combine events and backgrounds that must remain coherent over time.",
+        "<div class=\"rx-scene\"><blockquote>“A dog barks while rain falls in the background.”</blockquote><div><span>Foreground event<b>Dog barking</b></span><span>Acoustic background<b>Rain</b></span><span>Relationship<b>Simultaneous</b></span></div></div><p class=\"rx-takeaway\">The target is a structured acoustic scene, not a spoken reading of the prompt.</p>",
+        "<a href=\"https://arxiv.org/html/2207.09983v2\">DiffSound · 2022 preprint ↗</a> · Illustrative prompt, not a generated sample."
+      ],
+      [
+        "Method",
+        "Refine all acoustic tokens together.",
+        "Discrete diffusion revisits the whole spectrogram-token grid at each denoising step.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 260\" role=\"img\" aria-label=\"Sequential next-token prediction versus iterative joint token refinement\" xmlns=\"http://www.w3.org/2000/svg\"><text x=\"15\" y=\"32\" text-anchor=\"start\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Autoregressive baseline</text><rect x=\"15\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"29.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"52\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"66.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"89\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"103.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"126\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"140.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"163\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"177.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"200\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"214.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"237\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"251.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"274\" y=\"51\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"288.5\" y=\"70.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><path d=\"M325 67 L385 67 M378.0 72.0 L385 67 L378.0 62.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><text x=\"420\" y=\"73\" text-anchor=\"start\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Predict the next token</text><text x=\"15\" y=\"136\" text-anchor=\"start\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">DiffSound</text><rect x=\"15\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"29.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"52\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"66.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"89\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"103.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"126\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"140.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"163\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"177.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"200\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"214.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><path d=\"M248 172 L290 172 M283.0 177.0 L290 172 L283.0 167.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"309\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"323.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"346\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"360.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"383\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"397.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"420\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"434.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"457\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"471.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><rect x=\"494\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#f4f2ec\" stroke=\"#b8cdc1\"/><text x=\"508.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">·</text><path d=\"M542 172 L584 172 M577.0 177.0 L584 172 L577.0 167.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"605\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"619.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"642\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"656.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"679\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"693.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"716\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"730.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"753\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"767.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"790\" y=\"157\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"804.5\" y=\"176.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><text x=\"120\" y=\"224\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">Corrupted tokens</text><text x=\"412\" y=\"224\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">Joint refinement</text><text x=\"710\" y=\"224\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">Decoded spectrogram</text></svg><p class=\"rx-note\">Schematic token states. The codec decoder and vocoder then render the waveform.</p>",
+        "<a href=\"https://arxiv.org/html/2207.09983v2#S5\">Discrete diffusion method ↗</a>"
+      ],
+      [
+        "Evidence",
+        "Joint refinement improves relevance and fidelity.",
+        "Human ratings against the paper’s autoregressive token-decoder baseline.",
+        "<div class=\"rx-split\"><figure class=\"rx-bars\"><figcaption>Text relevance ↑</figcaption><div class=\"rx-bar-row\"><span>AR</span><div><b style=\"width:54.94%\" class=\"\"></b></div><strong>2.747</strong></div><div class=\"rx-bar-row\"><span>DiffSound</span><div><b style=\"width:76.66%\" class=\"rx-highlight\"></b></div><strong>3.833</strong></div></figure><figure class=\"rx-bars\"><figcaption>Overall MOS ↑</figcaption><div class=\"rx-bar-row\"><span>AR</span><div><b style=\"width:55.72%\" class=\"\"></b></div><strong>2.786</strong></div><div class=\"rx-bar-row\"><span>DiffSound</span><div><b style=\"width:71.20%\" class=\"rx-highlight\"></b></div><strong>3.56</strong></div></figure></div><p class=\"rx-takeaway\">Reported generation speed: <strong>5× the AR baseline</strong> in the paper’s inference setup.</p>",
+        "<a href=\"https://arxiv.org/html/2207.09983v2#S7.T1\">Table I and reported speed comparison ↗</a> · Rating scale 1–5; speed depends on sampling configuration."
+      ],
+      [
+        "Place in field",
+        "An early discrete-diffusion route to text-to-audio.",
+        "The work made text-conditioned sound generation reproducible through code, models, and examples.",
+        "<div class=\"rx-citation\"><small>EXPLICIT TECHNICAL CONTEXT</small><h5>Make-An-Audio · related work</h5><p>Identifies DiffSound as an early text-to-audio method using discrete diffusion over VQ-VAE codes.</p><a href=\"https://arxiv.org/html/2301.12661v1#S2.SS2\">Read the discussion ↗</a></div><div class=\"rx-path\"><div><small>DIFFSOUND</small><strong>Discrete codes</strong><span>Iterative token refinement</span></div><div><small>MAKE-AN-AUDIO</small><strong>Continuous latents</strong><span>Prompt-enhanced diffusion</span></div></div>",
+        "<a href=\"https://arxiv.org/html/2207.09983v2\">Paper ↗</a> · <a href=\"https://github.com/yangdongchao/Text-to-sound-Synthesis\">Code and models ↗</a>"
+      ]
+    ]
+  ],
+  "hifi-codec": [
+    "HiFi-Codec",
+    "Make audio tokens easier to model—and codecs easier to reproduce",
+    [
+      [
+        "Question",
+        "Every extra codebook adds predictions for the generator.",
+        "Codec quality and generation cost are linked through the token interface.",
+        "<div class=\"rx-codebooks\"><div><small>8 CODEBOOKS / FRAME</small><div><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div><span>8 token predictions</span></div><div><small>4 CODEBOOKS / FRAME</small><div><b></b><b></b><b></b><b></b></div><span>4 token predictions</span></div></div><p class=\"rx-takeaway\">HiFi-Codec targets reconstruction quality with fewer codebooks.</p>",
+        "<a href=\"https://arxiv.org/html/2305.02765v2#S1\">Motivation ↗</a> · Illustration at a fixed frame rate; not an inference-speed measurement."
+      ],
+      [
+        "Method",
+        "Split feature channels; refine each group’s residual.",
+        "Group-residual vector quantization gives each group its own quantization path.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 260\" role=\"img\" aria-label=\"Two feature groups with two residual quantization stages each\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"15\" y=\"95\" width=\"165\" height=\"62\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"97.5\" y=\"131.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Encoded features</text><path d=\"M180 126 H204 M204 69 V185\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M204 69 L228 69 M221.0 74.0 L228 69 L221.0 64.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M204 185 L228 185 M221.0 190.0 L228 185 L221.0 180.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"230\" y=\"43\" width=\"150\" height=\"53\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"305.0\" y=\"74.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Group A</text><rect x=\"230\" y=\"159\" width=\"150\" height=\"53\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"305.0\" y=\"190.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Group B</text><path d=\"M380 69 L424 69 M417.0 74.0 L424 69 L417.0 64.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M380 185 L424 185 M417.0 190.0 L424 185 L417.0 180.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"426\" y=\"43\" width=\"95\" height=\"53\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"473.5\" y=\"74.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Q1</text><path d=\"M521 69 L559 69 M552.0 74.0 L559 69 L552.0 64.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"561\" y=\"43\" width=\"95\" height=\"53\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"608.5\" y=\"74.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Q2</text><rect x=\"426\" y=\"159\" width=\"95\" height=\"53\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"473.5\" y=\"190.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Q3</text><path d=\"M521 185 L559 185 M552.0 190.0 L559 185 L552.0 180.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"561\" y=\"159\" width=\"95\" height=\"53\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"608.5\" y=\"190.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Q4</text><text x=\"540\" y=\"132\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">Quantize residual within each group</text><path d=\"M656 69 H679 V185 H656\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M679 126 L701 126 M694.0 131.0 L701 126 L694.0 121.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"701\" y=\"95\" width=\"164\" height=\"62\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"783.0\" y=\"131.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Combine → decode</text><text x=\"95\" y=\"232\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">Split channels, not time</text></svg><p class=\"rx-note\">Shown: two groups × two residual stages = four codebooks.</p>",
+        "<a href=\"https://arxiv.org/html/2305.02765v2#S3.SS3\">§3.3 · GRVQ ↗</a>"
+      ],
+      [
+        "Evidence",
+        "Four codebooks retain quality in a matched-rate comparison.",
+        "24 kHz audio · 240× downsampling · 100 frames per second.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">Codec</th><th scope=\"col\">Codebooks</th><th scope=\"col\">PESQ ↑</th><th scope=\"col\">STOI ↑</th></tr></thead><tbody><tr><th scope=\"row\">EnCodec · authors’ reproduction</th><td>8</td><td>3.62</td><td>0.94</td></tr><tr><th scope=\"row\">HiFi-Codec</th><td>4</td><td>3.63</td><td>0.95</td></tr></tbody></table></div><p class=\"rx-takeaway\"><strong>800 → 400 tokens/second</strong> at this frame rate, with comparable reported reconstruction scores.</p><p class=\"rx-note\">Derived token rates. A codec-system comparison, not an isolated GRVQ ablation.</p>",
+        "<a href=\"https://arxiv.org/html/2305.02765v2#S3.T1\">Table 1 ↗</a>"
+      ],
+      [
+        "Open research",
+        "Release the training tools as well as the codec.",
+        "AcademiCodec makes the representation layer available for reproduction and downstream modeling.",
+        "<div class=\"rx-resource\"><div><small>ACADEMICODEC</small><h5>Train · encode · reconstruct</h5><p>HiFi-Codec, EnCodec, and SoundStream implementations with pretrained models.</p><a href=\"https://github.com/yangdongchao/AcademiCodec\">Explore the toolkit ↗</a></div><div><small>RESEARCH THREAD</small><h5>A smaller audio interface</h5><p>HiFi-Codec studies codebook efficiency. ALMTokenizer adds compression across time and semantic supervision.</p><a href=\"presentations.html#almtokenizer-slide-1\">Continue to ALMTokenizer ↗</a></div></div>",
+        "<a href=\"https://github.com/yangdongchao/AcademiCodec\">Official repository ↗</a>"
+      ]
+    ]
+  ],
+  "almtokenizer": [
+    "ALMTokenizer",
+    "Compress the sequence without discarding what the model needs",
+    [
+      [
+        "Question",
+        "A good codec must also produce tokens a model can use.",
+        "Reconstruction quality alone does not tell us whether a token sequence supports understanding or generation.",
+        "<div class=\"rx-objectives\"><div><b>Compact</b><span>Fewer time steps</span></div><div><b>Semantic</b><span>Meaning survives compression</span></div><div><b>Reconstructable</b><span>Acoustic detail survives decoding</span></div></div><p class=\"rx-takeaway\">Optimize the interface for all three requirements, across speech, sound, and music.</p>",
+        "<a href=\"https://arxiv.org/html/2504.10344v1\">ALMTokenizer · ICML 2025 ↗</a>"
+      ],
+      [
+        "Method",
+        "Learnable queries compress across neighboring frames.",
+        "The encoder gathers temporal context before quantization rather than compressing each frame independently.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 260\" role=\"img\" aria-label=\"Contextual audio patches and a learnable query pass through an encoder; query outputs are quantized\" xmlns=\"http://www.w3.org/2000/svg\"><text x=\"20\" y=\"29\" text-anchor=\"start\" font-family=\"Arial,sans-serif\" font-size=\"14\" fill=\"#29463d\">Audio patches</text><rect x=\"20\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"34.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"57\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"71.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"94\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"108.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"131\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"145.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"168\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"182.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"205\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"219.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"242\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"256.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"279\" y=\"45\" width=\"29\" height=\"29\" rx=\"6\" fill=\"#b7d3c3\" stroke=\"#b8cdc1\"/><text x=\"293.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">●</text><rect x=\"347\" y=\"45\" width=\"85\" height=\"29\" rx=\"6\" fill=\"#f5e9cf\" stroke=\"#b8cdc1\"/><text x=\"389.5\" y=\"64.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Query</text><path d=\"M445 61 L483 61 M476.0 66.0 L483 61 L476.0 56.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"485\" y=\"31\" width=\"215\" height=\"60\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"592.5\" y=\"66.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Contextual encoder</text><path d=\"M700 61 L741 61 M734.0 66.0 L741 61 L734.0 56.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"743\" y=\"39\" width=\"114\" height=\"45\" rx=\"6\" fill=\"#f5e9cf\" stroke=\"#b8cdc1\"/><text x=\"800.0\" y=\"66.5\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Keep query</text><text x=\"540\" y=\"144\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"17\" fill=\"#29463d\">Quantize → compact audio tokens</text><text x=\"440\" y=\"195\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Semantic priors + masked reconstruction + token prediction</text><text x=\"440\" y=\"224\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">Train for meaning, fidelity, and predictability together</text></svg><p class=\"rx-note\">Schematic compression window. Token prediction is part of the training objective, not an extra inference stage.</p>",
+        "<a href=\"https://arxiv.org/html/2504.10344v1#S3\">Query compression and training objectives ↗</a>"
+      ],
+      [
+        "Evidence",
+        "Changing the tokenizer changes downstream language modeling.",
+        "LibriSpeech test-clean · tokenizer comparison within the shared downstream setup.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">Tokenizer</th><th scope=\"col\">TTS WER ↓</th><th scope=\"col\">ASR WER ↓</th></tr></thead><tbody><tr><th scope=\"row\">DAC</th><td>24.5</td><td>58.4 ± 1.2</td></tr><tr><th scope=\"row\">Mimi</th><td>16.0</td><td>23.1 ± 1.5</td></tr><tr><th scope=\"row\">GLM-4-Voice</th><td>9.9</td><td>16.3 ± 1.5</td></tr><tr><th scope=\"row\">ALMTokenizer</th><td>11.7</td><td>19.6 ± 1.8</td></tr></tbody></table></div><p class=\"rx-takeaway\">Large gains over reconstruction-oriented tokens; the speech-specialized GLM-4-Voice remains stronger here.</p>",
+        "<a href=\"https://arxiv.org/html/2504.10344v1#S4.T4\">Table 4 ↗</a> · WER: word error rate. ALMTokenizer also covers sound and music."
+      ],
+      [
+        "Application",
+        "Query compression becomes HeartCodec’s token interface.",
+        "HeartMuLa is a concrete application of the earlier representation research.",
+        "<div class=\"rx-path\"><div><small>ALMTOKENIZER</small><strong>Query compression</strong><span>Summarize context into fewer time steps</span></div><div><small>HEARTCODEC</small><strong>Low-rate music tokens</strong><span>Create a manageable generation target</span></div><div><small>HEARTMULA</small><strong>Music language model</strong><span>Predict compact tokens over time</span></div></div><div class=\"rx-split\"><div class=\"rx-panel \"><small>WHY IT MATTERS</small><h5>Sequence length is an architectural decision</h5><p>Compression determines how much audio fits into the generator’s context.</p></div><div class=\"rx-panel \"><small>TRACE THE CONNECTION</small><h5>Documented in HeartCodec</h5><p>The report describes query-based compression and cites ALMTokenizer.</p><a href=\"https://arxiv.org/html/2601.10547v3#S2.SS1\">Read §2.1 ↗</a></div></div>",
+        "<a href=\"https://arxiv.org/html/2601.10547v3#S2.SS1\">HeartCodec architecture ↗</a>"
+      ]
+    ]
+  ],
+  "uniaudio15": [
+    "UniAudio 1.5 / LLM-Codec",
+    "Teach a frozen language model an audio task through examples",
+    [
+      [
+        "Question",
+        "Can examples teach a frozen text LLM an audio task?",
+        "The challenge is the interface: ordinary codec IDs have no connection to a text model’s vocabulary.",
+        "<div class=\"rx-prompt\"><div class=\"rx-prompt-head\">IN-CONTEXT TASK · schematic, not model output</div><div><span>Example A</span><b>Audio tokens for a dog bark</b><em>→ “dog”</em></div><div><span>Example B</span><b>Audio tokens for a bell</b><em>→ “bell”</em></div><div class=\"rx-query\"><span>New input</span><b>Another audio token sequence</b><em>→ ?</em></div></div><p class=\"rx-takeaway\">Change the demonstrations. Keep the downstream LLM weights fixed.</p>",
+        "<a href=\"https://arxiv.org/html/2406.10056v1#S4\">Task formulation ↗</a>"
+      ],
+      [
+        "Interface",
+        "Quantize audio into the LLM’s existing vocabulary.",
+        "LLM-Codec learns the audio interface while reusing frozen vocabulary embeddings.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 260\" role=\"img\" aria-label=\"Audio encoded into frozen LLM vocabulary through three scales of quantization\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"15\" y=\"92\" width=\"130\" height=\"60\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"80.0\" y=\"127.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Audio</text><path d=\"M145 122 L178 122 M171.0 127.0 L178 122 L171.0 117.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"180\" y=\"92\" width=\"145\" height=\"60\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"252.5\" y=\"127.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Trained encoder</text><path d=\"M325 122 L358 122 M351.0 127.0 L358 122 L351.0 117.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"360\" y=\"55\" width=\"220\" height=\"132\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"470\" y=\"84\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"16\" fill=\"#29463d\">Multi-scale quantization</text><text x=\"470\" y=\"113\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">Semantic · coarse · residual</text><text x=\"470\" y=\"150\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">LLM vocabulary embeddings</text><path d=\"M580 122 L618 122 M611.0 127.0 L618 122 L611.0 117.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"620\" y=\"92\" width=\"245\" height=\"60\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"742.5\" y=\"127.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Vocabulary token IDs</text><text x=\"470\" y=\"218\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Codec trained   /   LLaMA 2 7B frozen</text></svg><p class=\"rx-note\">Semantic tokens can be used alone for understanding; acoustic layers retain information for reconstruction.</p>",
+        "<a href=\"https://arxiv.org/html/2406.10056v1#S3\">LLM-Codec · §3 ↗</a>"
+      ],
+      [
+        "Evidence",
+        "A shared vocabulary enables measurable few-shot transfer.",
+        "Frozen LLaMA 2 7B · 2-way classification · 1 example per class · task induction · no repeats.",
+        "<div class=\"rx-split\"><figure class=\"rx-bars\"><figcaption>Sound-event accuracy ↑</figcaption><div class=\"rx-bar-row\"><span>BLSP</span><div><b style=\"width:47.00%\" class=\"\"></b></div><strong>47%</strong></div><div class=\"rx-bar-row\"><span>LLM-Codec</span><div><b style=\"width:60.00%\" class=\"rx-highlight\"></b></div><strong>60%</strong></div></figure><figure class=\"rx-bars\"><figcaption>Emotion accuracy ↑</figcaption><div class=\"rx-bar-row\"><span>BLSP</span><div><b style=\"width:29.00%\" class=\"\"></b></div><strong>29%</strong></div><div class=\"rx-bar-row\"><span>LLM-Codec</span><div><b style=\"width:53.00%\" class=\"rx-highlight\"></b></div><strong>53%</strong></div></figure></div><p class=\"rx-takeaway\">The same frozen backbone can use examples through the learned audio interface.</p>",
+        "<a href=\"https://arxiv.org/html/2406.10056v1#S3.T2\">Table 2 ↗</a> · Semantic-layer configuration; controlled few-shot tasks."
+      ],
+      [
+        "Meaning",
+        "The contribution is a new adaptation mechanism.",
+        "Tasks are specified by input–output demonstrations rather than a task-specific backbone update.",
+        "<div class=\"rx-change\"><div><small>LEARN ONCE</small><strong>Audio → text vocabulary</strong><p>Train the codec to make audio accessible.</p></div><div><small>CHANGE AT INFERENCE</small><strong>Examples → task behavior</strong><p>Replace the demonstration pairs in the prompt.</p></div></div><div class=\"rx-path\"><div><small>1.0</small><strong>Shared training</strong><span>Many generation tasks</span></div><div><small>1.5</small><strong>Context learning</strong><span>Frozen text backbone</span></div><div><small>2.0</small><strong>Unified audio model</strong><span>Understanding + generation</span></div></div><p class=\"rx-note\">A proof of concept on simple tasks, including digit speech and denoising; broader task generalization remains the next challenge.</p>",
+        "<a href=\"https://arxiv.org/html/2406.10056v1#S6\">Conclusion ↗</a> · <a href=\"https://github.com/yangdongchao/LLM-Codec\">Code ↗</a>"
+      ]
+    ]
+  ],
+  "uniaudio2": [
+    "UniAudio 2.0",
+    "Connect understanding, generation, and learning from context",
+    [
+      [
+        "Question",
+        "A foundation model should learn more than a task catalog.",
+        "UniAudio 2.0 connects audio understanding, generation, and adaptation within a shared text–audio model.",
+        "<div class=\"rx-taskmatrix\"><div><small>UNDERSTAND</small><b>Audio → text</b><span>Transcription · captions · lyrics</span></div><div><small>GENERATE</small><b>Text → audio</b><span>Speech · sound · music · song</span></div><div><small>ADAPT</small><b>Examples → new mapping</b><span>Denoising · conversion · classification</span></div></div><p class=\"rx-takeaway\">The system must connect meanings, acoustic detail, and task structure.</p>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S4\">System formulation ↗</a>"
+      ],
+      [
+        "Architecture",
+        "Give different layers different jobs.",
+        "ReasoningCodec provides the tokens; specialized model layers connect perception, language, and acoustic generation.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 270\" role=\"img\" aria-label=\"Three stages of model layers, with text output from cross-modal layers and audio from generation layers\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"15\" y=\"102\" width=\"175\" height=\"60\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"102.5\" y=\"137.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Text + audio streams</text><path d=\"M190 132 H210 V202\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M210 202 L233 202 M226.0 207.0 L233 202 L226.0 197.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"235\" y=\"178\" width=\"300\" height=\"48\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"385.0\" y=\"207.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Lower: audio understanding</text><path d=\"M385 178 L385 158 M390.0 165.0 L385 158 L380.0 165.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"235\" y=\"110\" width=\"300\" height=\"48\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"385.0\" y=\"139.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Middle: cross-modal LLM</text><path d=\"M385 110 L385 90 M390.0 97.0 L385 90 L380.0 97.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"235\" y=\"42\" width=\"300\" height=\"48\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"385.0\" y=\"71.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Upper: audio generation</text><path d=\"M535 134 L595 134 M588.0 139.0 L595 134 L588.0 129.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"597\" y=\"106\" width=\"268\" height=\"54\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"731.0\" y=\"138.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Text output</text><path d=\"M535 66 L595 66 M588.0 71.0 L595 66 L588.0 61.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"597\" y=\"38\" width=\"268\" height=\"54\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"731.0\" y=\"70.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Local decoder → audio tokens</text><text x=\"385\" y=\"249\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">One autoregressive framework</text></svg>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S4.SS3\">§4.3 · functional layer specialization ↗</a> · Schematic; branches omit implementation details."
+      ],
+      [
+        "Transfer",
+        "Test task adaptation explicitly, beyond seen-task scores.",
+        "Selected reported evaluations distinguish learning from examples from zero-shot instruction transfer.",
+        "<div class=\"rx-split\"><div class=\"rx-panel \"><small>FEW-SHOT · ENGLISH EMOTION</small><h5>One example per class</h5><figure class=\"rx-bars\"><figcaption>Accuracy ↑</figcaption><div class=\"rx-bar-row\"><span>UniAudio 1.5</span><div><b style=\"width:45.00%\" class=\"\"></b></div><strong>45%</strong></div><div class=\"rx-bar-row\"><span>MiMo-Audio</span><div><b style=\"width:42.50%\" class=\"\"></b></div><strong>42.5%</strong></div><div class=\"rx-bar-row\"><span>UniAudio 2.0</span><div><b style=\"width:67.00%\" class=\"rx-highlight\"></b></div><strong>67%</strong></div></figure></div><div class=\"rx-panel \"><small>ZERO-SHOT · DYSARTHRIC ASR</small><h5>Recognize atypical speech</h5><figure class=\"rx-bars\"><figcaption>Word error rate ↓</figcaption><div class=\"rx-bar-row\"><span>Qwen2.5-Omni</span><div><b style=\"width:80.60%\" class=\"\"></b></div><strong>80.6%</strong></div><div class=\"rx-bar-row\"><span>UniAudio 2.0</span><div><b style=\"width:19.40%\" class=\"rx-highlight\"></b></div><strong>19.4%</strong></div></figure></div></div><p class=\"rx-note\">These are selected strengths, not universal superiority: MiMo-Audio is stronger on 2-shot voice-conversion WER (14.05 vs. 19.01).</p>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S4.T5\">Tables 5–6 ↗</a> · Different systems and training data; not a controlled architecture ablation."
+      ],
+      [
+        "Training",
+        "Build task relationships into the training sequence.",
+        "“Auditory sentences” join related text and audio segments so context can express a task.",
+        "<div class=\"rx-prompt\"><div class=\"rx-prompt-head\">AUDITORY SENTENCE · conceptual sequence</div><div><span>Segment 1</span><b>Related audio + description</b><em>context</em></div><div><span>Segment 2</span><b>Related audio + description</b><em>relationship</em></div><div class=\"rx-query\"><span>Continuation</span><b>Predict the next text or audio span</b><em>task</em></div></div><div class=\"rx-path\"><div><small>WARM-UP</small><strong>Perception + generation</strong><span>Initialize specialized layers</span></div><div><small>PRETRAIN</small><strong>Text + audio</strong><span>Build shared capability</span></div><div><small>MID-TRAIN</small><strong>Task compositions</strong><span>Practice using context</span></div></div>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S4.SS4\">§4.4 · data and staged training ↗</a>"
+      ]
+    ]
+  ],
+  "simplespeech": [
+    "SimpleSpeech",
+    "Simplify speech generation by choosing a better latent space",
+    [
+      [
+        "Idea",
+        "Make the speech latent easier to generate.",
+        "SQ-Codec bounds and quantizes each latent coordinate, creating the target space for Transformer diffusion.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 260\" role=\"img\" aria-label=\"Latent coordinates are bounded and rounded onto a finite scalar grid\" xmlns=\"http://www.w3.org/2000/svg\"><text x=\"140\" y=\"48\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"17\" fill=\"#29463d\">Bound with tanh</text><rect x=\"45\" y=\"70\" width=\"190\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"140.0\" y=\"104.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Value in [−1, 1]</text><path d=\"M235 99 L278 99 M271.0 104.0 L278 99 L271.0 94.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"280\" y=\"70\" width=\"280\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"420.0\" y=\"104.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Round to a fixed scalar grid</text><path d=\"M560 99 L607 99 M600.0 104.0 L607 99 L600.0 94.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"609\" y=\"70\" width=\"220\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"719.0\" y=\"104.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Compact latent target</text><path d=\"M75 194 H800\" stroke=\"#789488\" stroke-width=\"2\"/><circle cx=\"75.0\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"165.6\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"256.2\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"346.79999999999995\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"437.4\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"528.0\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"618.5999999999999\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"709.1999999999999\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><circle cx=\"799.8\" cy=\"194\" r=\"6\" fill=\"#2e645e\"/><text x=\"75\" y=\"230\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">−1</text><text x=\"438\" y=\"230\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">0</text><text x=\"800\" y=\"230\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">1</text></svg><p class=\"rx-note\">Illustrative grid. With S = 9, a bounded value 0.71 becomes round(0.71 × 9) / 9 ≈ 0.667.</p>",
+        "<a href=\"https://arxiv.org/html/2406.02328v3#S2.SS3\">§2.3 · scalar quantization ↗</a>"
+      ],
+      [
+        "System",
+        "Generate the whole latent sequence without phoneme durations.",
+        "Text, reference-voice features, and sentence duration condition a non-autoregressive Transformer.",
+        "<div class=\"rx-conditions\"><span>Plain text</span><span>Reference voice</span><span>Sentence duration</span></div><div class=\"rx-path\"><div><small>START</small><strong>Gaussian noise</strong><span>One full latent sequence</span></div><div><small>REFINE</small><strong>Transformer diffusion</strong><span>Conditioned iterative denoising</span></div><div><small>RECONSTRUCT</small><strong>SQ-Codec decoder</strong><span>Render the waveform</span></div></div><p class=\"rx-note\">Training transcripts are obtained with ASR. Sentence-level duration sets output length; word-level alignment is learned implicitly.</p>",
+        "<a href=\"https://arxiv.org/html/2406.02328v3#S2\">System · §2 ↗</a>"
+      ],
+      [
+        "Evidence",
+        "The latent choice affects the generated speech.",
+        "Tokenizer-swap ablation: compare VAE and SQ-Codec targets in the synthesis setup.",
+        "<div class=\"rx-split\"><figure class=\"rx-bars\"><figcaption>TTS word error rate ↓</figcaption><div class=\"rx-bar-row\"><span>VAE</span><div><b style=\"width:85.00%\" class=\"\"></b></div><strong>5.1%</strong></div><div class=\"rx-bar-row\"><span>SQ-Codec</span><div><b style=\"width:55.00%\" class=\"rx-highlight\"></b></div><strong>3.3%</strong></div></figure><figure class=\"rx-bars\"><figcaption>Predicted quality · DNS-MOS ↑</figcaption><div class=\"rx-bar-row\"><span>VAE</span><div><b style=\"width:69.80%\" class=\"\"></b></div><strong>3.49</strong></div><div class=\"rx-bar-row\"><span>SQ-Codec</span><div><b style=\"width:78.00%\" class=\"rx-highlight\"></b></div><strong>3.9</strong></div></figure></div><p class=\"rx-takeaway\">A representation should be evaluated through the generator that uses it.</p>",
+        "<a href=\"https://arxiv.org/html/2406.02328v3#S3.T5\">Table 5 ↗</a> · DNS-MOS is an automatic estimate, not a human MOS."
+      ],
+      [
+        "Continuation",
+        "The scalar space becomes a reusable reconstruction target.",
+        "The method connects a speech synthesis experiment to later audio decoding work.",
+        "<div class=\"rx-transfer\"><div><small>SIMPLESPEECH</small><strong>SQ-Codec + diffusion</strong><span>Generate speech in scalar space.</span></div><div><small>SIMPLESPEECH 2</small><strong>Flow-based generation</strong><span>Develop the generator and conditioning.</span></div><div><small>HEARTCODEC</small><strong>Music reconstruction</strong><span>Decode compact music tokens through SQ latents.</span></div></div>",
+        "<a href=\"https://arxiv.org/html/2601.10547v3#S2.SS1\">HeartCodec §2.1 ↗</a> · <a href=\"presentations.html#simplespeech2-slide-1\">SimpleSpeech 2 ↗</a>"
+      ]
+    ]
+  ],
+  "simplespeech2": [
+    "SimpleSpeech 2",
+    "Turn scalar-latent synthesis into a simpler, faster TTS system",
+    [
+      [
+        "Advance",
+        "A faster generator in the same scalar-latent direction.",
+        "SimpleSpeech 2 develops flow matching, timestep-aware experts, and more robust voice conditioning.",
+        "<div class=\"rx-change\"><div><small>SIMPLESPEECH</small><strong>Scalar diffusion</strong><p>Establish the bounded latent target.</p></div><div><small>SIMPLESPEECH 2</small><strong>Flow-based Transformer</strong><p>Learn the movement from noise toward speech.</p></div></div><div class=\"rx-split\"><div class=\"rx-big\"><strong>100 → 25</strong><span>Reported diffusion sampling steps</span></div><div class=\"rx-big\"><strong>1.60 → 0.25</strong><span>Reported real-time factor</span></div></div><p class=\"rx-note\">System comparison: training data and architecture also change.</p>",
+        "<a href=\"https://arxiv.org/html/2408.13893v2#S5.T3\">Table III and §V-B ↗</a> · RTF = synthesis time / audio duration."
+      ],
+      [
+        "Method",
+        "Let the denoising time help choose the expert.",
+        "Time-MoE combines the latent state and diffusion timestep to route computation inside the flow-based Transformer.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 292\" role=\"img\" aria-label=\"Diffusion timestep and latent features jointly route to Time-MoE experts\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"15\" y=\"37\" width=\"190\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"110.0\" y=\"71.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Noisy speech latent</text><rect x=\"15\" y=\"153\" width=\"190\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"110.0\" y=\"187.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Diffusion timestep</text><path d=\"M205 66 H250 V122 H290 M205 182 H250 V122\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"291\" y=\"94\" width=\"135\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"358.5\" y=\"128.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Router</text><path d=\"M426 123 H462 M462 42 V222 M462 42 H485 M462 102 H485 M462 162 H485 M462 222 H485\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"485\" y=\"20\" width=\"180\" height=\"44\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"575.0\" y=\"47.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Expert 1</text><rect x=\"485\" y=\"80\" width=\"180\" height=\"44\" rx=\"6\" fill=\"#f5e9cf\" stroke=\"#b8cdc1\"/><text x=\"575.0\" y=\"107.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Expert 2</text><rect x=\"485\" y=\"140\" width=\"180\" height=\"44\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"575.0\" y=\"167.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Expert 3</text><rect x=\"485\" y=\"200\" width=\"180\" height=\"44\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"575.0\" y=\"227.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Expert 4</text><path d=\"M665 42 H687 V222 H665 M665 102 H687 M665 162 H687\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M687 123 L711 123 M704.0 128.0 L711 123 L704.0 118.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"711\" y=\"94\" width=\"153\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"787.5\" y=\"128.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Latent update</text><text x=\"580\" y=\"274\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"13\" fill=\"#29463d\">Timestep-aware feed-forward computation</text></svg>",
+        "<a href=\"https://arxiv.org/html/2408.13893v2#S3\">Figure 3 · Time-MoE ↗</a> · Schematic; flow matching is the training formulation."
+      ],
+      [
+        "Ablation",
+        "Both Time-MoE and flow matching improve the tested setup.",
+        "Architecture/formulation ablations provide a closer test than comparing complete TTS systems.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">Setting</th><th scope=\"col\">WER ↓</th><th scope=\"col\">DNS-MOS ↑</th></tr></thead><tbody><tr><th scope=\"row\">DDPM formulation</th><td>9.0</td><td>3.82</td></tr><tr><th scope=\"row\">Without Time-MoE</th><td>8.2</td><td>3.80</td></tr><tr><th scope=\"row\">SimpleSpeech 2</th><td>7.5</td><td>3.85</td></tr></tbody></table></div><p class=\"rx-takeaway\">The latent space is only part of the answer; how the generator uses it also matters.</p>",
+        "<a href=\"https://arxiv.org/html/2408.13893v2#S5.T8\">Table VIII ↗</a> · Automatic metrics from the reported ablation."
+      ],
+      [
+        "Quality",
+        "Faster generation accompanies better reported naturalness.",
+        "English zero-shot TTS system comparison, with 95% confidence intervals.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">System</th><th scope=\"col\">Naturalness MOS ↑</th><th scope=\"col\">Real-time factor ↓</th></tr></thead><tbody><tr><th scope=\"row\">SimpleSpeech</th><td>3.97 ± 0.21</td><td>1.60</td></tr><tr><th scope=\"row\">SimpleSpeech 2</th><td>4.28 ± 0.12</td><td>0.25</td></tr></tbody></table></div><p class=\"rx-takeaway\">RTF 0.25 means 4 seconds of audio per second of compute in this setup.</p><p class=\"rx-note\">This is a system comparison, not a claim that flow matching alone causes the entire speed gain.</p>",
+        "<a href=\"https://arxiv.org/html/2408.13893v2#S5.T3\">Table III ↗</a> · <a href=\"https://github.com/yangdongchao/SimpleSpeech\">Code ↗</a>"
+      ]
+    ]
+  ],
+  "longcat-omni": [
+    "LongCat-Flash-Omni",
+    "Bring multimodal understanding into real-time interaction",
+    [
+      [
+        "System",
+        "Connect what the model sees, hears, and says.",
+        "I participated in the LongCat-Flash-Omni team project.",
+        "<div class=\"rx-streams\"><div><small>VIDEO</small><b>Frame 1</b><b>Frame 2</b><b>Frame 3</b></div><div><small>AUDIO</small><span>Chunk 1</span><span>Chunk 2</span><span>Chunk 3</span></div></div><p class=\"rx-takeaway\">Synchronized input chunks preserve the relationship between visual events and speech.</p>",
+        "<a href=\"https://arxiv.org/html/2511.00279v2#S2\">Team report · streaming multimodal input ↗</a> · Conceptual timeline."
+      ],
+      [
+        "Serving",
+        "Overlap perception and generation to reduce response delay.",
+        "Incremental processing starts before the user’s turn has ended.",
+        "<div class=\"rx-timeline\"><div><span>Audio / video input</span><b style=\"margin-left:0;width:65%\">Stream and encode</b></div><div><span>Language model</span><b style=\"margin-left:12%;width:67%\">Prefill → speculative decode</b></div><div><span>Endpoint detection</span><b class=\"rx-warmbar\" style=\"margin-left:65%;width:22%\">600–700 ms</b></div><div><span>Response delivery</span><b style=\"margin-left:87%;width:13%\">&lt;100 ms</b></div></div><p class=\"rx-note\">The reported <100 ms is after endpoint detection, not total end-to-end latency. Timeline is schematic.</p>",
+        "<a href=\"https://arxiv.org/html/2511.00279v2#S6.SS2\">§6.2 · asynchronous streaming ↗</a>"
+      ],
+      [
+        "Evidence",
+        "Evaluate joint audio–visual understanding.",
+        "Team-reported system results; selected cross-modality benchmarks.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">Instruct model</th><th scope=\"col\">OmniBench ↑</th><th scope=\"col\">WorldSense ↑</th><th scope=\"col\">DailyOmni ↑</th></tr></thead><tbody><tr><th scope=\"row\">Qwen3-Omni</th><td>58.41</td><td>52.01</td><td>69.33</td></tr><tr><th scope=\"row\">Gemini 2.5 Pro · budget 128</th><td>66.80</td><td>63.96</td><td>80.61</td></tr><tr><th scope=\"row\">LongCat-Flash-Omni</th><td>61.38</td><td>60.89</td><td>82.38</td></tr></tbody></table></div><p class=\"rx-note\">OmniBench uses the team’s corrected scoring version. Model sizes and training differ.</p>",
+        "<a href=\"https://arxiv.org/html/2511.00279v2#S7.T14\">Table 14 ↗</a>"
+      ],
+      [
+        "Contribution",
+        "Participation in a large-scale omni-modal system.",
+        "This team project connects my audio research with multimodal interaction.",
+        "<div class=\"rx-split\"><div class=\"rx-big\"><strong>560B / 27B</strong><span>Total / activated model parameters</span></div><div class=\"rx-panel \"><small>OPEN PROJECT</small><h5>Inspect the system</h5><p>Technical report, released model, and serving implementation.</p><a href=\"https://github.com/meituan-longcat/LongCat-Flash-Omni\">Official repository ↗</a></div></div><p class=\"rx-takeaway\">Related first-author work: <a href=\"presentations.html#omni-autothink-slide-1\">Omni-AutoThink → adaptive reasoning</a>.</p>",
+        "<a href=\"https://arxiv.org/html/2511.00279v2\">LongCat-Flash-Omni team report ↗</a>"
+      ]
+    ]
+  ],
+  "omni-autothink": [
+    "Omni-AutoThink",
+    "Learn when multimodal reasoning is worth the effort",
+    [
+      [
+        "Question",
+        "An omni model should learn when reasoning is useful.",
+        "My first-author work studies adaptive reasoning across text, audio, and vision.",
+        "<div class=\"rx-decision\"><div class=\"rx-decision-input\">Multimodal question</div><div><section><small>DIRECT ANSWER</small><strong>When the evidence is sufficient</strong><p>Avoid unnecessary reasoning.</p></section><section><small>THINK, THEN ANSWER</small><strong>When inference is needed</strong><p>Spend reasoning effort on the harder case.</p></section></div></div><p class=\"rx-takeaway\">The choice of response mode becomes learned behavior.</p>",
+        "<a href=\"https://arxiv.org/html/2512.03783v2\">Omni-AutoThink · research question ↗</a>"
+      ],
+      [
+        "Learning",
+        "Reward correct direct answers without rewarding blind shortcuts.",
+        "Adaptive SFT initializes both modes; Adaptive GRPO samples them and learns from correctness.",
+        "<div class=\"rx-rewards\"><div></div><b>Correct</b><b>Incorrect</b><strong>No-think</strong><span class=\"rx-good\">+2</span><span class=\"rx-bad\">−1</span><strong>Think</strong><span class=\"rx-good\">+1</span><span>0</span></div><p class=\"rx-note\">Adaptive sampling/rejection changes which rollouts contribute to the update.</p>",
+        "<a href=\"https://arxiv.org/html/2512.03783v2#S3.SS4\">§3.4 · reward, Equation 9 ↗</a>"
+      ],
+      [
+        "Behavior",
+        "Thinking increases with audio-question difficulty.",
+        "Text–audio benchmark · five calibrated difficulty levels.",
+        "<figure class=\"rx-bars\"><figcaption>Responses using thinking mode</figcaption><div class=\"rx-bar-row\"><span>L1 · easiest</span><div><b style=\"width:17.00%\" class=\"\"></b></div><strong>17%</strong></div><div class=\"rx-bar-row\"><span>L2</span><div><b style=\"width:37.00%\" class=\"\"></b></div><strong>37%</strong></div><div class=\"rx-bar-row\"><span>L3</span><div><b style=\"width:60.00%\" class=\"\"></b></div><strong>60%</strong></div><div class=\"rx-bar-row\"><span>L4</span><div><b style=\"width:69.00%\" class=\"\"></b></div><strong>69%</strong></div><div class=\"rx-bar-row\"><span>L5 · hardest</span><div><b style=\"width:71.00%\" class=\"rx-highlight\"></b></div><strong>71%</strong></div></figure><p class=\"rx-takeaway\">Overall: <strong>73% accuracy</strong> with <strong>47% thinking rate</strong>.</p>",
+        "<a href=\"https://arxiv.org/html/2512.03783v2#S4.T3\">Table 3 ↗</a> · Thinking rate measures mode selection, not token savings or latency."
+      ],
+      [
+        "Ablation",
+        "SFT and RL together unlock adaptation across modalities.",
+        "Same base model · reported training-stage ablation · Pass@1 accuracy.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">Training</th><th scope=\"col\">Text</th><th scope=\"col\">Audio + text</th><th scope=\"col\">Audio + vision + text</th></tr></thead><tbody><tr><th scope=\"row\">Base</th><td>35%</td><td>64%</td><td>48%</td></tr><tr><th scope=\"row\">+ SFT</th><td>49%</td><td>64%</td><td>50%</td></tr><tr><th scope=\"row\">+ RL only</th><td>60%</td><td>66%</td><td>50%</td></tr><tr><th scope=\"row\">+ SFT + RL</th><td>66%</td><td>73%</td><td>69%</td></tr></tbody></table></div><p class=\"rx-note\">The accompanying benchmark evaluates four modality groups over five difficulty levels.</p>",
+        "<a href=\"https://arxiv.org/html/2512.03783v2#S4.T7\">Table 7 ↗</a> · <a href=\"https://github.com/yangdongchao/Omni-AutoThink\">Code and benchmark ↗</a>"
+      ]
+    ]
+  ],
+  "make-an-audio": [
+    "Make-An-Audio",
+    "Improve text-to-audio through better supervision and latent modeling",
+    [
+      [
+        "Bottleneck",
+        "Text-to-audio has a data problem and a modeling problem.",
+        "Paired captions are scarce, while raw waveforms are expensive generation targets.",
+        "<div class=\"rx-split\"><div class=\"rx-panel rx-warm\"><small>SUPERVISION</small><h5>Use more uncaptioned audio</h5><p>Construct pseudo prompts and new concept combinations.</p></div><div class=\"rx-panel \"><small>GENERATION</small><h5>Model compressed spectrograms</h5><p>Generate continuous latents conditioned on language.</p></div></div><p class=\"rx-takeaway\">Make-An-Audio addresses both constraints in one text-to-audio system.</p>",
+        "<a href=\"https://arxiv.org/html/2301.12661v1#S3\">Method overview ↗</a>"
+      ],
+      [
+        "Method",
+        "Improve the supervision before improving the generator.",
+        "Prompt enhancement expands training pairs; latent diffusion turns prompts into sound.",
+        "<div class=\"rx-lanes\"><div><small>TRAINING DATA</small><b>Uncaptioned audio</b><i>→</i><b>Expert distillation</b><i>→</i><b>Dynamic reprogramming</b><i>→</i><strong>Pseudo prompts</strong></div><div><small>GENERATION</small><b>Text / CLAP</b><i>→</i><strong>Latent diffusion</strong><i>→</i><b>Spectrogram decoder</b><i>→</i><b>Vocoder</b></div></div><p class=\"rx-note\">The top lane constructs compositional supervision; the bottom lane describes inference.</p>",
+        "<a href=\"https://arxiv.org/html/2301.12661v1#S3\">Figures 2–3 · prompt enhancement and model ↗</a>"
+      ],
+      [
+        "Evidence",
+        "Quality and prompt alignment improve together.",
+        "Reported AudioCaps comparison; DiffSound is the reference system.",
+        "<div class=\"rx-split\"><figure class=\"rx-bars\"><figcaption>FID ↓ · audio distribution</figcaption><div class=\"rx-bar-row\"><span>DiffSound</span><div><b style=\"width:89.62%\" class=\"\"></b></div><strong>7.17</strong></div><div class=\"rx-bar-row\"><span>Make-An-Audio</span><div><b style=\"width:57.63%\" class=\"rx-highlight\"></b></div><strong>4.61</strong></div></figure><figure class=\"rx-bars\"><figcaption>CLAP ↑ · text–audio alignment</figcaption><div class=\"rx-bar-row\"><span>DiffSound</span><div><b style=\"width:70.00%\" class=\"\"></b></div><strong>0.42</strong></div><div class=\"rx-bar-row\"><span>Make-An-Audio</span><div><b style=\"width:80.33%\" class=\"rx-highlight\"></b></div><strong>0.482</strong></div></figure></div><p class=\"rx-note\">CLAP-conditioned variant. This system comparison changes multiple components; it does not isolate prompt enhancement alone.</p>",
+        "<a href=\"https://arxiv.org/html/2301.12661v1#S5.T1\">Table 1 ↗</a>"
+      ],
+      [
+        "Extensions",
+        "The generator also becomes an editing tool.",
+        "The paper explores ways to condition the same audio-generation approach beyond a caption alone.",
+        "<div class=\"rx-edit\"><div><small>TEXT + EXISTING AUDIO</small><strong>Modify a sound</strong><span>Add noise, then denoise toward a new prompt.</span></div><div><small>MASKED AUDIO</small><strong>Fill missing regions</strong><div class=\"rx-mask\"><b>Known</b><em>Fill</em><b>Known</b></div><span>Inpainting uses additional fine-tuning.</span></div><div><small>IMAGE / VIDEO</small><strong>Describe, then synthesize</strong><span>Convert visual information into a text condition.</span></div></div>",
+        "<a href=\"https://arxiv.org/html/2301.12661v1#S4\">§4 · extensions ↗</a> · <a href=\"https://text-to-audio.github.io/\">Project examples ↗</a>"
+      ]
+    ]
+  ],
+  "reasoningcodec": [
+    "ReasoningCodec",
+    "An audio interface for both understanding and generation",
+    [
+      [
+        "Question",
+        "Understanding and reconstruction ask different things of a token.",
+        "ReasoningCodec is the representation contribution inside UniAudio 2.0.",
+        "<div class=\"rx-split\"><div class=\"rx-panel \"><small>MEANING</small><h5>What does the audio tell us?</h5><p>Words, events, musical structure, and descriptions.</p></div><div class=\"rx-panel rx-warm\"><small>SIGNAL</small><h5>What must the decoder recover?</h5><p>Voice, timbre, texture, and fine acoustic cues.</p></div></div><p class=\"rx-takeaway\">Factorize these roles while allowing the two representations to communicate.</p>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S3\">ReasoningCodec · §3 ↗</a>"
+      ],
+      [
+        "Method",
+        "Two branches, with semantic conditioning between them.",
+        "The reasoning branch aligns with language; the reconstruction branch preserves semantic-rich acoustic information.",
+        "<svg class=\"rx-diagram\" viewBox=\"0 0 880 260\" role=\"img\" aria-label=\"Reasoning and reconstruction branches coupled through FiLM\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"15\" y=\"103\" width=\"112\" height=\"58\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"71.0\" y=\"137.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Audio</text><rect x=\"190\" y=\"24\" width=\"210\" height=\"52\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"295.0\" y=\"55.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Reasoning branch</text><rect x=\"190\" y=\"168\" width=\"210\" height=\"52\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"295.0\" y=\"199.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Reconstruction branch</text><path d=\"M127 132 L169 132 M162.0 137.0 L169 132 L162.0 127.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M169 50 V194 M169 50 H190 M169 194 H190\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><path d=\"M400 50 L440 50 M433.0 55.0 L440 50 L433.0 45.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"442\" y=\"24\" width=\"190\" height=\"52\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"537.0\" y=\"55.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Reasoning tokens</text><path d=\"M400 194 L440 194 M433.0 199.0 L440 194 L433.0 189.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"442\" y=\"168\" width=\"190\" height=\"52\" rx=\"6\" fill=\"#f5e9cf\" stroke=\"#b8cdc1\"/><text x=\"537.0\" y=\"199.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Reconstruction tokens</text><path d=\"M540 77 L540 160 M535.0 153.0 L540 160 L545.0 153.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><text x=\"610\" y=\"125\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"12\" fill=\"#29463d\">FiLM conditioning</text><path d=\"M632 50 L670 50 M663.0 55.0 L670 50 L663.0 45.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"672\" y=\"24\" width=\"192\" height=\"52\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"768.0\" y=\"55.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Text / planning</text><path d=\"M632 194 L670 194 M663.0 199.0 L670 194 L663.0 189.0\" fill=\"none\" stroke=\"#638375\" stroke-width=\"2\"/><rect x=\"672\" y=\"168\" width=\"192\" height=\"52\" rx=\"6\" fill=\"#edf4ef\" stroke=\"#b8cdc1\"/><text x=\"768.0\" y=\"199.0\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-size=\"15\" fill=\"#29463d\">Flow decoder → audio</text></svg><p class=\"rx-note\">FiLM scales and shifts reconstruction features using information from the reasoning branch.</p>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S3\">§3 and Appendix A ↗</a> · Simplified architecture."
+      ],
+      [
+        "Evidence",
+        "The two streams contribute differently to understanding.",
+        "Branch ablation in the same downstream evaluation; lower ASR error and higher classification accuracy are better.",
+        "<div class=\"rx-table-wrap\"><table class=\"rx-table\"><thead><tr><th scope=\"col\">Available tokens</th><th scope=\"col\">ASR WER ↓</th><th scope=\"col\">Emotion accuracy ↑</th><th scope=\"col\">Sound accuracy ↑</th></tr></thead><tbody><tr><th scope=\"row\">Reasoning only</th><td>10.1</td><td>50.2</td><td>33.0</td></tr><tr><th scope=\"row\">Reconstruction only</th><td>16.3</td><td>42.1</td><td>48.7</td></tr><tr><th scope=\"row\">Both</th><td>9.0</td><td>56.4</td><td>63.3</td></tr></tbody></table></div><p class=\"rx-takeaway\">The combined representation improves all three shown tasks over either stream alone.</p>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S4.T3\">Table 3 ↗</a> · Selected columns; music classification favors reasoning-only tokens (80 vs. 70)."
+      ],
+      [
+        "Fidelity",
+        "Semantic abstraction still needs a reconstructable audio stream.",
+        "Speech reconstruction at the paper’s matched token-rate setting.",
+        "<div class=\"rx-split\"><figure class=\"rx-bars\"><figcaption>Wideband PESQ ↑</figcaption><div class=\"rx-bar-row\"><span>DAC</span><div><b style=\"width:46.67%\" class=\"\"></b></div><strong>2.1</strong></div><div class=\"rx-bar-row\"><span>ALMTokenizer</span><div><b style=\"width:44.44%\" class=\"\"></b></div><strong>2</strong></div><div class=\"rx-bar-row\"><span>ReasoningCodec</span><div><b style=\"width:52.44%\" class=\"rx-highlight\"></b></div><strong>2.36</strong></div></figure><div class=\"rx-panel \"><small>PLACE IN THE CODEC SERIES</small><h5>Change what the representation is for</h5><div class=\"rx-mini-list\"><p><b>HiFi-Codec</b> · fewer codebooks</p><p><b>ALMTokenizer</b> · compact, semantic-rich tokens</p><p><b>ReasoningCodec</b> · complementary functional roles</p></div></div></div><p class=\"rx-note\">Codec-system comparison; the ASR/classification ablation on the previous page separately tests branch utility.</p>",
+        "<a href=\"https://arxiv.org/html/2602.04683v1#S4.T1\">Table 1 ↗</a> · <a href=\"presentations.html#uniaudio2-slide-2\">UniAudio 2.0 architecture ↗</a>"
+      ]
+    ]
+  ]
+}

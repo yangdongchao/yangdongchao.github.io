@@ -1,0 +1,100 @@
+{
+  "uniaudio": {
+    "date": "ICML 2024 · released 2023",
+    "group": "UniAudio series",
+    "intro": "Audio generation had largely developed as separate systems for speech, music and environmental sound. UniAudio asks whether their knowledge can be shared in one model. It expresses task conditions and target audio as token sequences, and uses a Global–Local Transformer to separate long-range temporal modeling from acoustic detail within each frame. The contribution is a reusable formulation and architecture for multi-task audio generation.",
+    "meaning": "Its architectural influence spans speech and music: Fish Speech explicitly links Dual AR to UniAudio; Moshi cites it among its hierarchical audio-modeling predecessors; Google DeepMind’s Live Music Models describes a similar method citing UniAudio and Moshi. HeartMuLa brings Global–Local modeling into song generation.",
+    "paper": "https://arxiv.org/abs/2310.00704"
+  },
+  "uniaudio15": {
+    "date": "NeurIPS 2024",
+    "group": "UniAudio series",
+    "intro": "UniAudio 1.5 changes the question from training a model on many tasks to giving a frozen language model a new audio task through examples. Its LLM-Codec maps audio into token IDs from the LLM’s existing vocabulary. A prompt can then contain labeled audio examples followed by a query. The codec is trained, but the downstream language model does not receive task-specific weight updates.",
+    "meaning": "The importance is the learning mechanism: an audio representation can expose in-context learning already present in a text model. The evidence is a proof of concept in controlled tasks, with clear room to scale.",
+    "paper": "https://arxiv.org/abs/2406.10056"
+  },
+  "uniaudio2": {
+    "date": "2026 · preprint",
+    "group": "UniAudio series",
+    "intro": "UniAudio 2.0 studies how a shared audio language model can understand, generate, and adapt to new tasks. ReasoningCodec separates text-aligned reasoning tokens from acoustic reconstruction tokens. The model assigns different roles to its lower, middle, and upper layers: audio understanding, cross-modal language modeling, and audio generation. Auditory sentences organize related audio and text segments into task-rich training sequences; evaluation covers seen, few-shot, and zero-shot tasks.",
+    "meaning": "This advances the thesis’s central question: how should representation and modeling be designed together so that a model can both interpret and produce audio?",
+    "paper": "https://arxiv.org/abs/2602.04683"
+  },
+  "diffsound": {
+    "date": "2022 → TASLP 2023",
+    "group": "Text-to-audio series",
+    "intro": "Diffsound explores generating environmental sound from text. Discrete diffusion predicts and repeatedly refines acoustic tokens jointly, addressing the directional bias, error accumulation and sequential cost of autoregressive decoding.",
+    "meaning": "It establishes an early part of my research trajectory: language becomes a condition for creating sound. The method is evaluated against an autoregressive baseline for both quality and speed.",
+    "paper": "https://arxiv.org/abs/2207.09983"
+  },
+  "instructtts": {
+    "date": "January 2023 → TASLP 2024",
+    "group": "Speech generative models",
+    "intro": "InstructTTS studies an early natural-language interface for expressive speech: specify both the words to speak and a free-form description of how they should sound. The work pairs speech with style descriptions, aligns language and speech-style representations, and conditions discrete diffusion on the resulting style embedding. Disentanglement addresses the risk that a style representation also captures unwanted content or speaker information.",
+    "meaning": "The contribution is the connection between an intuitive user instruction and acoustic control. The fixed-text listening comparison makes that connection audible.",
+    "paper": "https://arxiv.org/abs/2301.13662"
+  },
+  "hifi-codec": {
+    "date": "2023 · codec & open-source toolkit",
+    "group": "Audio Tokenizer series",
+    "intro": "HiFi-Codec treats codec design as part of the generation problem: too many codebooks increase the generator’s prediction burden. Group-residual vector quantization targets high-fidelity reconstruction with four codebooks.",
+    "meaning": "AcademiCodec complements the method with open training code and pretrained codec models, making the representation layer easier for other researchers to reproduce and extend.",
+    "paper": "https://arxiv.org/abs/2305.02765"
+  },
+  "almtokenizer": {
+    "date": "ICML 2025",
+    "group": "Audio Tokenizer series",
+    "intro": "ALMTokenizer asks what makes a codec useful to an audio language model, beyond reconstructing a waveform. Learnable queries compress information across frames, while semantic objectives encourage tokens to retain information useful for understanding. The result is a low-bitrate interface evaluated both as a codec and inside a shared audio language-model backbone.",
+    "meaning": "This ties compression to downstream usefulness. Its query-based compression later becomes part of HeartCodec, giving a direct path from representation research to music generation.",
+    "paper": "https://arxiv.org/abs/2504.10344"
+  },
+  "simplespeech": {
+    "date": "Interspeech 2024 · Best Student Paper Award",
+    "group": "Speech generative models",
+    "intro": "SimpleSpeech asks whether speech synthesis becomes simpler when the latent space itself is easier to model. SQ-Codec bounds and scalar-quantizes the representation; a Transformer diffusion model generates speech in that space. Together with plain-text input and no phoneme-level duration alignment, this reduces several sources of complexity in non-autoregressive synthesis.",
+    "meaning": "The key result is a representation–generator pairing. Tokenizer-swap experiments test the latent design through downstream speech generation, and SQ-Codec later supports the reconstruction thread in the thesis and HeartCodec.",
+    "paper": "https://arxiv.org/abs/2406.02328"
+  },
+  "simplespeech2": {
+    "date": "2024 → TASLP 2025",
+    "group": "Speech generative models",
+    "intro": "SimpleSpeech 2 develops flow-based synthesis in SQ-Codec’s scalar latent space. Its Transformer uses Time-MoE to make computation depend on the diffusion timestep, alongside voice conditioning that separates speaker identity from recording attributes. Plain-text conditioning and sentence-level duration avoid phoneme-duration annotations. The paper evaluates the individual design choices as well as the complete system’s quality and generation speed.",
+    "meaning": "It strengthens the link between representation and synthesis efficiency. Flow-based scalar generation also provides the methodological basis for the thesis’s reconstruction work.",
+    "paper": "https://arxiv.org/abs/2408.13893"
+  },
+  "heartmula": {
+    "date": "2026 · research in application",
+    "group": "Research in practice",
+    "intro": "HeartMuLa is a concrete application of methods from my earlier research. ALMTokenizer’s query-based compression contributes to HeartCodec’s token interface; UniAudio’s Global–Local architecture supports hierarchical music modeling; and SQ-Codec from the SimpleSpeech line provides a latent space for flow-based reconstruction.",
+    "meaning": "The case shows cumulative research: representation, modeling and reconstruction become complementary components of a team-built open music system.",
+    "paper": "https://arxiv.org/abs/2601.10547"
+  },
+  "longcat-omni": {
+    "date": "2025 · participation in the LongCat-Omni team",
+    "group": "Omni models",
+    "intro": "I participated in LongCat-Flash-Omni, an open omni-modal model for real-time audio-visual interaction. The team combines multimodal perception, a sparse MoE backbone and speech reconstruction, with progressive training across modalities.",
+    "meaning": "This extends my experience from audio models into a large multimodal system where perception and spoken response must work together.",
+    "paper": "https://arxiv.org/abs/2511.00279"
+  },
+  "omni-autothink": {
+    "date": "2025 · first-author paper",
+    "group": "Omni models",
+    "intro": "My first-author paper Omni-AutoThink studies how an omni model can decide when to reason. Adaptive SFT and Adaptive GRPO train the model to choose between a direct answer and a reasoning response across text, audio and visual inputs.",
+    "meaning": "The work adds a decision-making dimension to multimodal capability: allocate reasoning where it helps. Its benchmark measures accuracy and thinking behavior across difficulty levels.",
+    "paper": "https://arxiv.org/abs/2512.03783"
+  },
+  "make-an-audio": {
+    "date": "ICML 2023 · co-authored work",
+    "group": "Text-to-audio series",
+    "intro": "Make-An-Audio addresses scarce text–audio pairs and difficult waveform modeling through pseudo prompt enhancement, spectrogram latent diffusion and CLAP conditioning.",
+    "meaning": "It extends the text-to-audio thread with complementary work on supervision and representation.",
+    "paper": "https://arxiv.org/abs/2301.12661"
+  },
+  "reasoningcodec": {
+    "date": "2026 · tokenizer in UniAudio 2.0",
+    "group": "Audio Tokenizer series",
+    "intro": "ReasoningCodec separates audio into reasoning tokens and reconstruction tokens, connecting text-aligned analysis with high-fidelity synthesis.",
+    "meaning": "Presented here as the tokenizer contribution within UniAudio 2.0, it extends the representation line from compact coding toward a shared understanding-and-generation interface.",
+    "paper": "https://arxiv.org/abs/2602.04683"
+  }
+}
